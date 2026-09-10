@@ -1,0 +1,110 @@
+# AGENTS.md
+
+**注意1**：用户是中国人，英文看不懂，尽量使用中文。
+**注意2**：如果缺乏对应知识，就去网上查资料。
+
+## 工作区模型（bizs / cws）
+
+- 本目录是**工作区**（组合层）：以 **bms 克隆**为基座，与一个或多个产品仓库克隆平级并置。
+  - `bizs/`：`bms/`（BMS 平台/基座）+ `biz/`（biz 企业运营管理产品）
+  - `cws/`：`bms/`（BMS 平台/基座）+ `cw/`（CW 创作系统产品）
+- **同步靠各自 git 远端**：改动任一处 bms 克隆 → 提交推送 → 其他工作区的 `bms/` 克隆 `git pull` 自然更新，合并与冲突走 git 机制；产品仓库同理。**没有文档同步脚本**（原 base-sync 机制已退役）。
+- **产品仓库只放产品专属内容**：`文档/规范`、`文档/资料/` 基座子目录（AI/工具/开发服务器/开发机/知识档案）、`文档/资源` 为指向 `../../bms/文档/...` 的**符号链接**；产品文档内的相对路径引用照常使用。通过产品仓库路径编辑基座文件时，实际修改的是 bms 克隆，须回 bms 仓库提交。
+- 工作区根目录本身是一个 **git 仓库**，只跟踪工作区配置（`AGENTS.md`、`.opencode/`、`.graphifyignore`、`.gitignore`）；`bms/`、产品目录、`graphify-out/` 一律忽略。扩展新组合：在工作区根克隆对应产品仓库即可（bms 保持平级不动）。
+- 目录使用中文名（`文档/`），回复与文档保持中文。
+
+## bms 仓（基座与平台）
+
+- BMS（基础管理系统）定位平台：后端管理用途；当前尚未有源代码，规划已定案——技术栈、功能模块、开发计划与验收标准见 `bms/文档/规划/项目规划说明.md`，动手写代码前先读该文件。
+- 入口文档：`bms/README.md`（导航）、`bms/文档/文档首页.md`（全量导航）、`bms/文档/规划/平台可扩展性规划.md`（三层模型、业务不入平台、工作区模型）。
+- 平台机制、扩展接入流程、标识符（表前缀/业务码/错误码段/事件域）登记以 bms 文档为权威；基座边界见 `bms/文档/基座文档清单.md`。
+- `.opencode/` 中 graphify 安装脚本生成的产物（plugins/graphify.js 等）勿手动修改；`opencode.json` 的 plugin 数组登记自定义插件，MCP server 走 `opencode.json` 的 `mcp` 段登记。`.reasonix/`、reasonix.toml 由 IDE 工具生成——勿手动修改。
+
+## 开发环境与远程操作（脚本在 `bms/scripts/tools/`）
+
+- 开发服务器 **mjbk**（常开：GitLab CE、开发依赖服务、MySQL/PostgreSQL/达梦 DM8 三库）、Windows 服务器 **mjw** 与开发机 **mjpc**（Ubuntu）。远程操作方式与命令模板：
+  - mjbk 走 SSH（mjpc 公钥免密）：`bms/文档/资料/开发服务器/linux/开发服务器部署使用说明总览.md`
+  - mjw 走 WinRM（5985）：`bms/文档/资料/开发服务器/windows/开发服务器Windows部署使用说明总览.md`（内网 IP 与账号见 `bms/文档/用户文档/本地资源.md`），需要时再读，不常驻上下文。
+- **服务器电源控制**（唤醒/睡眠/关机工具链，详见 `bms/文档/资料/开发服务器/linux/开发服务器电源控制使用说明.md`）：
+  - 远程唤醒：`python3 bms/scripts/tools/wol/wake_mjbk.py`（发 WOL 魔术包并等待 SSH 就绪，低风险）；入口 `bms/scripts/tools/wol/唤醒mjbk.sh`。
+  - 远程睡眠：`python3 bms/scripts/tools/wol/sleep_mjbk.py`（SSH 执行 `systemctl suspend` 进入 S3，含确认）；入口 `bms/scripts/tools/wol/睡眠mjbk.sh`。
+  - 每日自动睡眠/唤醒：mjbk 侧 systemd timer `mjbk-sleep-rtc.timer`（每晚 00:00 自动睡、08:00 由 RTC 自醒）。
+  - 远程关机：`python3 bms/scripts/tools/wol/shutdown_mjbk.py`（**破坏性操作，执行前必须经用户确认**）；入口 `bms/scripts/tools/wol/关机mjbk.sh`。
+  - 凭据从 `bms/deploy/.env` 读取（键位见 `bms/deploy/.env.example`），脚本不硬编码密码；SSH 连接走 mjpc 公钥免密。
+- 机器凭据见 `bms/文档/用户文档/本地资源.md`（已 gitignore，**勿恢复跟踪、勿提交、勿写入其他文档**）；凭据副本统一存各仓库 `deploy/.env`（已 gitignore，勿提交，勿将 .env 内容写入其他文档）。
+
+## 文档要求
+
+- 格式与布局遵循 `bms/文档/规范/文档生成规范.md`，**生成文档前先读该文件**。
+- 图形按形态选画法（该文件 7.7 节）：**逻辑图形**（流程/时序/状态/类/关系/甘特）一律 mermaid；**目录树、文件清单**等罗列型内容用框线文本目录清单（`└├│─` + 行尾 `#` 注释），不得画成 mermaid（mindmap / graph TD）；**线框图/可交互原型**用 html 资产。
+- md 在 VS Code 预览 mermaid 需安装 "Markdown Preview Mermaid" 扩展。
+- html 的相关图片、音频、视频等资源文件统一放到同级目录的"资源"文件夹下的同名目录中。
+- 项目内全部命名（代码、数据库、API、基础设施）遵循 `bms/文档/规范/命名规范.md`。
+- **公开文档红线**：随仓库推送到 GitHub 的文档（README.md、LICENSE 等）不得出现本地资源信息——开发服务器/开发机名称、内网 IP、端口、磁盘与目录、SSH/服务账号等一律不写，只保留泛化描述并指向本地文档（如《开发服务器部署使用说明总览》）；本地资源细节只允许存在于已 gitignore 的凭据文档与内网部署文档中。
+
+## graphify（工作区级知识图谱）
+
+工作区通过知识图谱（`graphify-out/`，位于工作区根）辅助代码理解与架构分析，图谱覆盖 `bms/` 与各产品仓库，已启用中文查询分词。
+
+规则：
+
+- 代码库相关问题，当 `graphify-out/graph.json` 存在时，先运行 `graphify query "<问题>"`（可直接用中文）。关系用 `graphify path "<A>" "<B>"`，概念用 `graphify explain "<概念>"`。返回的是范围受限的子图，通常比 GRAPH_REPORT.md 或原始 grep 输出小得多。
+- 修改文档或设计节点后，在**工作区根**运行 `graphify update .` 保持图谱最新（纯 AST，无 API 开销）；排除规则见 `.graphifyignore`（改动排除项后用 `--force` 修剪）；随后运行 `python3 bms/scripts/tools/graphify/localize-graph.py` 收尾（汉化 graph.html + 生成中文架构图 CALLFLOW.html）。
+- 若 `graphify-out/wiki/index.md` 存在，用它做广域导航，避免直接浏览源码。
+- 仅在需要宏观架构审查、或 query/path/explain 信息不足时，才读 `graphify-out/GRAPH_REPORT.md`。
+- graphify 安装、排除规则、重建取舍、社区命名等细节见 `bms/文档/资料/AI/graphify部署使用说明.md`，不在此展开。
+
+## 缺陷工具链（defect）
+
+CI 自动化测试失败时的缺陷处理工具链在 `bms/scripts/tools/defect/`（流程与口径详见 bms《测试规范》第 9 节）：
+
+- `defect_capture.py`：归档 REPRO 复现包（现场 dump + 失败堆栈 + repro.json + REPRO.md，默认 `/mnt/data/backup/defects/<缺陷ID>/`）并自动创建/复用 GitLab Issue（fingerprint 去重、`defect-auto` 标签）。
+- `ai_fix.py`：AI 修复代理——扫描 defect-auto 未关闭 Issue 定位根因生成补丁，本地模型（LM Studio）优先、云端兜底；bot 推 `fix/defect-*` 分支提 MR，**人工 review 合入、人工关闭**。
+- `reproduce.py`：按 commit 检出 + dump 导入 + 跑用例的一键复现验证。
+
+## 设计文档编号重排（reorder-design）
+
+调整设计文档体系节点编号时**勿手动改名**，用 `bms/scripts/tools/reorder-design/reorder-design.py`：阅读顺序定义在同目录 `order.json`（产品仓库自带自己的 order.json）；自动完成两步法重命名 + 全库引用替换（支持 md 与 html）；先 `--dry-run` 预览再执行；md 总览的节点表行序不自动排序，执行后人工核对。
+
+## 后台任务执行（BG，强制执行）
+
+**背景**：bash 工具是同步阻塞的，长命令执行期间无反馈，观感"卡死"。因此对命令做分级处理，禁止长时间无反馈等待。
+
+- 工具链在 `bms/scripts/tools/bg/`（bg-run/bg-status/bg-stop/bg-wait.py），插件文件为 `.opencode/plugins/bg.js`（注册 `bg_run` / `bg_status` / `gl_watch_pipeline` / `bg_stop` 四个工具；python 脚本留在 bms，插件内按相对路径调用）。
+- **执行纪律**：
+  - 预计 **≤10 秒**的命令（查询、状态、文件操作、短命令）：直接执行。
+  - 预计 **>10 秒**的命令（下载、安装、构建、ssh 远程、服务启动、备份等）：一律 **`bg_run` 后台化** → 立即返回 → 用 **`bg_status` 秒级轮询**（间隔 10-30 秒）直到 FINISHED；绝不直接同步等待、绝不阻塞挂起等待。
+  - GitLab 流水线结果用 **`gl_watch_pipeline`**（内部自动走 bg 链路盯守到终态；凭据读 `bms/deploy/.env` 的 `GITLAB_API_*`），不手动拼 API 轮询。
+  - 不写长 `Start-Sleep` 等待；探测服务就绪用短超时（2-3 秒）轮询。
+  - 调用 `.cmd/.bat` 批处理或 npx 时注意输出缓冲（PowerShell 管道要等进程退出才吐输出），必要时绕开包装直接用可执行文件。
+  - **workdir 坑**：opencode 插件进程 cwd 是 `$HOME`，`bg_run` 不带 `workdir` 时命令落在 `$HOME` 而非工作区。凡依赖仓库相对路径的命令（如 `graphify update .`、`python3 bms/scripts/...`），`bg_run` 必须显式传 `workdir`（工作区根或对应仓库的绝对路径）；误在 `$HOME` 生成 `graphify-out/` 需手动删除。
+- 状态文件默认 `%USERPROFILE%\.bg`（`-Base` 可覆盖）；任务按 `-Name` 区分，同名会覆盖。
+- 示例：`bg_run {name: 远程磁盘, command: "ssh <账号>@<mjbk-IP> df -h"}` → 立即返回；`bg_status {name: 远程磁盘}` → 秒级出结果。
+
+## 网络与镜像
+
+- 涉及软件、组件、依赖、容器镜像等下载安装时，**优先使用国内镜像**（阿里云、清华 TUNA、中科大、华为云等），默认源访问不畅时立即切换镜像，不长时间等待。
+- 常用镜像：PyPI 用阿里云/清华源、npm 用淘宝（npmmirror）源、Docker Hub 用阿里云/华为云加速器、Windows 组件安装卡在微软源时改用本地/镜像分发方式。
+- **GitHub 加速用 ghfast.top**（实测有效）：前缀拼接法——`https://ghfast.top/https://github.com/<owner>/<repo>`，支持 release 下载与 `git ls-remote --tags`；取最新版本号用 `git ls-remote --tags <加速URL> | tail`（GitHub API 不走镜像代理）。mirror.ghproxy.com 已实测失效（页面抓不到 tag、API 不可代理），勿再用。
+- 安装类命令默认带国内源参数，文档与脚本中写明所用镜像地址。
+
+## 讨论与确认（强制执行）
+
+- **凡是待用户拍板的事项（技术选型、方案取舍、范围划分、是否执行某项修改、执行方式等），必须先逐项提出并逐一确认，严禁擅自替用户拍板——包括不得按推荐值或默认值直接执行。**
+- **逐项确认必须使用 question 工具**，把本次所有待决项一次性列出（一项一个问题），每项格式固定：
+  - 候选选项至少 2 个；
+  - 推荐项放在第一位并标注"（推荐）"；
+  - 每个选项附一句差异说明。
+- 不要顾虑问题数量，问的越多越细越好；宁可把一项拆成多项，也不要合并、遗漏或简化成"你看着办"。
+- 用户未明确回答的项目保持未定，不得默认通过；继续追问，直到逐项确认完毕。
+- 全部确认后，把确认结果汇总成表格回显给用户，用户无异议后才进入执行。
+- 执行中如出现新的待拍板事项（原确认范围外），同样先询问再执行，不得自行扩展。
+
+## 提交与推送
+
+- **每个仓库独立提交**：bms 仓库、各产品仓库、工作区仓库分别提交；工作区仓库只提交配置文件（AGENTS.md、.opencode/、.graphifyignore、.gitignore）。
+- **不要擅自提交**（git commit），也不要擅自推送（git push）；完成工作后询问用户是否提交，得到明确指令后再执行。
+- 用户说"提交"才提交；用户说"推送"（或确认推远程）才推送；不确定时继续询问，不猜测意图。
+- 提交信息遵循《命名规范》：`type(scope): 中文描述`；只暂存本次任务相关文件，不夹带无关改动。
+- 两级指令独立确认：说"提交"只做 commit；说"推送"只做 push 至 main。单人开发期**直推 main，不走 MR**（纯文档改动 CI 自动跳过；含代码改动 main 自动跑冒烟验证）。
+- bms 改动同步到其他工作区：在任一工作区提交推送后，其他工作区执行 `git -C bms pull` 即可对齐；产品仓库同理。

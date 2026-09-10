@@ -1,0 +1,17 @@
+# graphify 抽取排除规则（工作区级，覆盖 bms 与各产品仓库；语法同 .gitignore）
+# 注意：工作区图谱以 --no-gitignore 运行（工作区仓库 .gitignore 的 /* 会整体排除 bms/与产品仓库），
+# 因此各仓库 gitignore 的本地私有/临时内容须在此显式排除。
+# graphify 输出产物与依赖
+graphify-out/
+node_modules/
+# 本地私有与临时内容（各仓库 gitignore，图谱同样不入）
+用户文档/
+临时/
+deploy/.env
+.reasonix/
+temp/
+# 第三方静态资源库（mermaid/压缩 JS/CSS 等）与原型共享资源，避免英文函数名节点刷屏
+*/文档/资源/
+*/文档/设计/原型设计/共享资源
+# graphify 工具自带的英文 skill 文档
+.opencode/skills/graphify/
