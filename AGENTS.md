@@ -103,7 +103,7 @@ CI 自动化测试失败时的缺陷处理工具链在 `bms/scripts/tools/defect
 
 ## 提交与推送
 
-- **每个仓库独立提交**：bms 仓库、各产品仓库、工作区仓库分别提交；工作区仓库只提交配置文件（AGENTS.md、.opencode/、.graphifyignore、.gitignore）。
+- **每个仓库独立提交**：bms 仓库、各产品仓库、工作区仓库分别提交；工作区仓库只提交配置文件（`AGENTS.md`、`README.md`、`.opencode/`、`.graphifyignore`、`.gitignore`、`.vscode/`、`*.code-workspace`）。
 - **不要擅自提交**（git commit），也不要擅自推送（git push）；完成工作后询问用户是否提交，得到明确指令后再执行。
 - 用户说"提交"才提交；用户说"推送"（或确认推远程）才推送；不确定时继续询问，不猜测意图。
 - 提交信息遵循《命名规范》：`type(scope): 中文描述`；只暂存本次任务相关文件，不夹带无关改动。

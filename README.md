@@ -32,7 +32,7 @@
 
 ## 4. AI 工作区与知识图谱
 
-- `AGENTS.md`：工作区级 AI 协作约定（bms 工具链、后台任务执行、镜像、讨论确认与提交流程）；各产品仓库另有产品级 `AGENTS.md`。
+- `AGENTS.md`：工作区级 AI 协作约定（唯一一份，含 bms 工具链、后台任务执行、镜像、讨论确认与提交流程；产品仓库不单设）。
 - `graphify-out/`：工作区级知识图谱，覆盖 `bms/` 与产品仓库；查询 `graphify query "<问题>"`，更新在**工作区根**运行 `graphify update .`，随后 `python3 bms/scripts/tools/graphify/localize-graph.py` 收尾。
 - 开发工具链（bg 后台执行器、wol 电源控制、defect 缺陷工具等）在 `bms/scripts/tools/`。
 
