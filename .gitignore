@@ -4,6 +4,7 @@
 !/.gitignore
 !/.graphifyignore
 !/.opencode/
+!/.vscode/
 !/AGENTS.md
 !/README.md
 !/*.code-workspace
