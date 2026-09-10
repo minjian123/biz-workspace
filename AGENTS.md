@@ -9,37 +9,37 @@
   - `bizs/`：`bms/`（BMS 平台/基座）+ `biz/`（biz 企业运营管理产品）
   - `cws/`：`bms/`（BMS 平台/基座）+ `cw/`（CW 创作系统产品）
 - **同步靠各自 git 远端**：改动任一处 bms 克隆 → 提交推送 → 其他工作区的 `bms/` 克隆 `git pull` 自然更新，合并与冲突走 git 机制；产品仓库同理。**没有文档同步脚本**（原 base-sync 机制已退役）。
-- **产品仓库只放产品专属内容**：`文档/规范`、`文档/资料/` 基座子目录（AI/工具/开发服务器/开发机/知识档案）、`文档/资源` 为指向 `../../bms/文档/...` 的**符号链接**；产品文档内的相对路径引用照常使用。通过产品仓库路径编辑基座文件时，实际修改的是 bms 克隆，须回 bms 仓库提交。
+- **产品仓库只放产品专属内容**：产品文档根按项目命名（如 `biz文档/`、`cw文档/`），其下 `规范`、`资料/` 基座子目录（AI/工具/开发服务器/开发机/知识档案）、`资源` 为指向 `../../bms/bms文档/...` 的**符号链接**；产品文档内的相对路径引用照常使用。通过产品仓库路径编辑基座文件时，实际修改的是 bms 克隆，须回 bms 仓库提交。
 - 工作区根目录本身是一个 **git 仓库**，只跟踪工作区配置（`AGENTS.md`、`.opencode/`、`.graphifyignore`、`.gitignore`）；`bms/`、产品目录、`graphify-out/` 一律忽略。扩展新组合：在工作区根克隆对应产品仓库即可（bms 保持平级不动）。
-- 目录使用中文名（`文档/`），回复与文档保持中文。
+- 目录使用中文名；文档根按项目命名（bms 为 `bms文档/`、产品为 `<产品>文档/`，如 `biz文档/`、`cw文档/`）；回复与文档保持中文。
 
 ## bms 仓（基座与平台）
 
-- BMS（基础管理系统）定位平台：后端管理用途；当前尚未有源代码，规划已定案——技术栈、功能模块、开发计划与验收标准见 `bms/文档/规划/项目规划说明.md`，动手写代码前先读该文件。
-- 入口文档：`bms/README.md`（导航）、`bms/文档/文档首页.md`（全量导航）、`bms/文档/规划/平台可扩展性规划.md`（三层模型、业务不入平台、工作区模型）。
-- 平台机制、扩展接入流程、标识符（表前缀/业务码/错误码段/事件域）登记以 bms 文档为权威；基座边界见 `bms/文档/基座文档清单.md`。
+- BMS（基础管理系统）定位平台：后端管理用途；当前尚未有源代码，规划已定案——技术栈、功能模块、开发计划与验收标准见 `bms/bms文档/规划/项目规划说明.md`，动手写代码前先读该文件。
+- 入口文档：`bms/README.md`（导航）、`bms/bms文档/文档首页.md`（全量导航）、`bms/bms文档/规划/平台可扩展性规划.md`（三层模型、业务不入平台、工作区模型）。
+- 平台机制、扩展接入流程、标识符（表前缀/业务码/错误码段/事件域）登记以 bms 文档为权威；基座边界见 `bms/bms文档/基座文档清单.md`。
 - `.opencode/` 中 graphify 安装脚本生成的产物（plugins/graphify.js 等）勿手动修改；`opencode.json` 的 plugin 数组登记自定义插件，MCP server 走 `opencode.json` 的 `mcp` 段登记。`.reasonix/`、reasonix.toml 由 IDE 工具生成——勿手动修改。
 
 ## 开发环境与远程操作（脚本在 `bms/scripts/tools/`）
 
 - 开发服务器 **mjbk**（常开：GitLab CE、开发依赖服务、MySQL/PostgreSQL/达梦 DM8 三库）、Windows 服务器 **mjw** 与开发机 **mjpc**（Ubuntu）。远程操作方式与命令模板：
-  - mjbk 走 SSH（mjpc 公钥免密）：`bms/文档/资料/开发服务器/linux/开发服务器部署使用说明总览.md`
-  - mjw 走 WinRM（5985）：`bms/文档/资料/开发服务器/windows/开发服务器Windows部署使用说明总览.md`（内网 IP 与账号见 `bms/文档/用户文档/本地资源.md`），需要时再读，不常驻上下文。
-- **服务器电源控制**（唤醒/睡眠/关机工具链，详见 `bms/文档/资料/开发服务器/linux/开发服务器电源控制使用说明.md`）：
+  - mjbk 走 SSH（mjpc 公钥免密）：`bms/bms文档/资料/开发服务器/linux/开发服务器部署使用说明总览.md`
+  - mjw 走 WinRM（5985）：`bms/bms文档/资料/开发服务器/windows/开发服务器Windows部署使用说明总览.md`（内网 IP 与账号见 `bms/bms文档/用户文档/本地资源.md`），需要时再读，不常驻上下文。
+- **服务器电源控制**（唤醒/睡眠/关机工具链，详见 `bms/bms文档/资料/开发服务器/linux/开发服务器电源控制使用说明.md`）：
   - 远程唤醒：`python3 bms/scripts/tools/wol/wake_mjbk.py`（发 WOL 魔术包并等待 SSH 就绪，低风险）；入口 `bms/scripts/tools/wol/唤醒mjbk.sh`。
   - 远程睡眠：`python3 bms/scripts/tools/wol/sleep_mjbk.py`（SSH 执行 `systemctl suspend` 进入 S3，含确认）；入口 `bms/scripts/tools/wol/睡眠mjbk.sh`。
   - 每日自动睡眠/唤醒：mjbk 侧 systemd timer `mjbk-sleep-rtc.timer`（每晚 00:00 自动睡、08:00 由 RTC 自醒）。
   - 远程关机：`python3 bms/scripts/tools/wol/shutdown_mjbk.py`（**破坏性操作，执行前必须经用户确认**）；入口 `bms/scripts/tools/wol/关机mjbk.sh`。
   - 凭据从 `bms/deploy/.env` 读取（键位见 `bms/deploy/.env.example`），脚本不硬编码密码；SSH 连接走 mjpc 公钥免密。
-- 机器凭据见 `bms/文档/用户文档/本地资源.md`（已 gitignore，**勿恢复跟踪、勿提交、勿写入其他文档**）；凭据副本统一存各仓库 `deploy/.env`（已 gitignore，勿提交，勿将 .env 内容写入其他文档）。
+- 机器凭据见 `bms/bms文档/用户文档/本地资源.md`（已 gitignore，**勿恢复跟踪、勿提交、勿写入其他文档**）；凭据副本统一存各仓库 `deploy/.env`（已 gitignore，勿提交，勿将 .env 内容写入其他文档）。
 
 ## 文档要求
 
-- 格式与布局遵循 `bms/文档/规范/文档生成规范.md`，**生成文档前先读该文件**。
+- 格式与布局遵循 `bms/bms文档/规范/文档生成规范.md`，**生成文档前先读该文件**。
 - 图形按形态选画法（该文件 7.7 节）：**逻辑图形**（流程/时序/状态/类/关系/甘特）一律 mermaid；**目录树、文件清单**等罗列型内容用框线文本目录清单（`└├│─` + 行尾 `#` 注释），不得画成 mermaid（mindmap / graph TD）；**线框图/可交互原型**用 html 资产。
 - md 在 VS Code 预览 mermaid 需安装 "Markdown Preview Mermaid" 扩展。
 - html 的相关图片、音频、视频等资源文件统一放到同级目录的"资源"文件夹下的同名目录中。
-- 项目内全部命名（代码、数据库、API、基础设施）遵循 `bms/文档/规范/命名规范.md`。
+- 项目内全部命名（代码、数据库、API、基础设施）遵循 `bms/bms文档/规范/命名规范.md`。
 - **公开文档红线**：随仓库推送到 GitHub 的文档（README.md、LICENSE 等）不得出现本地资源信息——开发服务器/开发机名称、内网 IP、端口、磁盘与目录、SSH/服务账号等一律不写，只保留泛化描述并指向本地文档（如《开发服务器部署使用说明总览》）；本地资源细节只允许存在于已 gitignore 的凭据文档与内网部署文档中。
 
 ## graphify（工作区级知识图谱）
@@ -52,7 +52,7 @@
 - 修改文档或设计节点后，在**工作区根**运行 `graphify update .` 保持图谱最新（纯 AST，无 API 开销）；排除规则见 `.graphifyignore`（改动排除项后用 `--force` 修剪）；随后运行 `python3 bms/scripts/tools/graphify/localize-graph.py` 收尾（汉化 graph.html + 生成中文架构图 CALLFLOW.html）。
 - 若 `graphify-out/wiki/index.md` 存在，用它做广域导航，避免直接浏览源码。
 - 仅在需要宏观架构审查、或 query/path/explain 信息不足时，才读 `graphify-out/GRAPH_REPORT.md`。
-- graphify 安装、排除规则、重建取舍、社区命名等细节见 `bms/文档/资料/AI/graphify部署使用说明.md`，不在此展开。
+- graphify 安装、排除规则、重建取舍、社区命名等细节见 `bms/bms文档/资料/AI/graphify部署使用说明.md`，不在此展开。
 
 ## 缺陷工具链（defect）
 
