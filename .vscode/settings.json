@@ -1,3 +1,6 @@
 {
-  "files.exclude": {}
+  // biz/bms文档 为产品仓库根的基座软链（→ bms/bms文档），内容随 bms 仓库展示，此处隐藏避免重复
+  "files.exclude": {
+    "biz/bms文档": true
+  }
 }
