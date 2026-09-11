@@ -1,11 +1,3 @@
 {
-  "files.exclude": {
-    "biz/biz文档/规范": true,
-    "biz/biz文档/资源": true,
-    "biz/biz文档/资料/AI": true,
-    "biz/biz文档/资料/工具": true,
-    "biz/biz文档/资料/开发服务器": true,
-    "biz/biz文档/资料/开发机": true,
-    "biz/biz文档/资料/知识档案": true
-  }
+  "files.exclude": {}
 }
