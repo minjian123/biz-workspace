@@ -23,16 +23,14 @@
 
 ## 开发环境与远程操作（脚本在 `bms/scripts/tools/`）
 
-- 开发服务器 **mjbk**（常开：GitLab CE、开发依赖服务、MySQL/PostgreSQL/达梦 DM8 三库）、Windows 服务器 **mjw** 与开发机 **mjpc**（Ubuntu）。远程操作方式与命令模板：
-  - mjbk 走 SSH（mjpc 公钥免密）：`bms/bms文档/资料/开发服务器/linux/开发服务器部署使用说明总览.md`
-  - mjw 走 WinRM（5985）：`bms/bms文档/资料/开发服务器/windows/开发服务器Windows部署使用说明总览.md`（内网 IP 与账号见 `bms/bms文档/用户文档/本地资源.md`），需要时再读，不常驻上下文。
-- **服务器电源控制**（唤醒/睡眠/关机工具链，详见 `bms/bms文档/资料/开发服务器/linux/开发服务器电源控制使用说明.md`）：
+- 开发服务器（内网常开：GitLab CE、开发依赖服务、MySQL/PostgreSQL/达梦 DM8 三库）、Windows 服务器与开发机（Ubuntu）。远程操作方式与命令模板见 bms `bms文档/资料/开发服务器/`（linux/windows 各一份「部署使用说明总览」）；服务器/开发机名称、内网 IP 与账号属于本地资源信息，一律不写入公开文档，以本地凭据文档为准。
+- **服务器电源控制**（唤醒/睡眠/关机工具链，详见 bms `bms文档/资料/开发服务器/linux/开发服务器电源控制使用说明.md`）：
   - 远程唤醒：`python3 bms/scripts/tools/wol/wake_mjbk.py`（发 WOL 魔术包并等待 SSH 就绪，低风险）；入口 `bms/scripts/tools/wol/唤醒mjbk.sh`。
   - 远程睡眠：`python3 bms/scripts/tools/wol/sleep_mjbk.py`（SSH 执行 `systemctl suspend` 进入 S3，含确认）；入口 `bms/scripts/tools/wol/睡眠mjbk.sh`。
-  - 每日自动睡眠/唤醒：mjbk 侧 systemd timer `mjbk-sleep-rtc.timer`（每晚 00:00 自动睡、08:00 由 RTC 自醒）。
+  - 每日自动睡眠/唤醒：服务器侧 systemd timer（每晚 00:00 自动睡、08:00 由 RTC 自醒）。
   - 远程关机：`python3 bms/scripts/tools/wol/shutdown_mjbk.py`（**破坏性操作，执行前必须经用户确认**）；入口 `bms/scripts/tools/wol/关机mjbk.sh`。
-  - 凭据从 `bms/deploy/.env` 读取（键位见 `bms/deploy/.env.example`），脚本不硬编码密码；SSH 连接走 mjpc 公钥免密。
-- 机器凭据见 `bms/bms文档/用户文档/本地资源.md`（已 gitignore，**勿恢复跟踪、勿提交、勿写入其他文档**）；凭据副本统一存各仓库 `deploy/.env`（已 gitignore，勿提交，勿将 .env 内容写入其他文档）。
+  - 凭据从 `bms/deploy/.env` 读取（键位见 `bms/deploy/.env.example`），脚本不硬编码密码；SSH 连接走开发机公钥免密。
+- 机器凭据见 bms `bms文档/用户文档/本地资源.md`（已 gitignore，**勿恢复跟踪、勿提交、勿写入其他文档**）；凭据副本统一存各仓库 `deploy/.env`（已 gitignore，勿提交，勿将 .env 内容写入其他文档）。
 
 ## 文档要求
 
@@ -60,7 +58,7 @@
 
 CI 自动化测试失败时的缺陷处理工具链在 `bms/scripts/tools/defect/`（流程与口径详见 bms《测试规范》第 9 节）：
 
-- `defect_capture.py`：归档 REPRO 复现包（现场 dump + 失败堆栈 + repro.json + REPRO.md，默认 `/mnt/data/backup/defects/<缺陷ID>/`）并自动创建/复用 GitLab Issue（fingerprint 去重、`defect-auto` 标签）。
+- `defect_capture.py`：归档 REPRO 复现包（现场 dump + 失败堆栈 + repro.json + REPRO.md，归档目录见 bms《测试规范》/工具脚本说明）并自动创建/复用 GitLab Issue（fingerprint 去重、`defect-auto` 标签）。
 - `ai_fix.py`：AI 修复代理——扫描 defect-auto 未关闭 Issue 定位根因生成补丁，本地模型（LM Studio）优先、云端兜底；bot 推 `fix/defect-*` 分支提 MR，**人工 review 合入、人工关闭**。
 - `reproduce.py`：按 commit 检出 + dump 导入 + 跑用例的一键复现验证。
 
@@ -80,7 +78,7 @@ CI 自动化测试失败时的缺陷处理工具链在 `bms/scripts/tools/defect
   - 不写长 `Start-Sleep` 等待；探测服务就绪用短超时（2-3 秒）轮询。
   - 调用 `.cmd/.bat` 批处理或 npx 时注意输出缓冲（PowerShell 管道要等进程退出才吐输出），必要时绕开包装直接用可执行文件。
   - **workdir 坑**：opencode 插件进程 cwd 是 `$HOME`，`bg_run` 不带 `workdir` 时命令落在 `$HOME` 而非工作区。凡依赖仓库相对路径的命令（如 `graphify update .`、`python3 bms/scripts/...`），`bg_run` 必须显式传 `workdir`（工作区根或对应仓库的绝对路径）；误在 `$HOME` 生成 `graphify-out/` 需手动删除。
-- 状态文件默认 `%USERPROFILE%\.bg`（`-Base` 可覆盖）；任务按 `-Name` 区分，同名会覆盖。
+- 状态文件默认用户目录下 `.bg/`（`-Base` 可覆盖）；任务按 `-Name` 区分，同名会覆盖。
 - 示例：`bg_run {name: 远程磁盘, command: "ssh <账号>@<mjbk-IP> df -h"}` → 立即返回；`bg_status {name: 远程磁盘}` → 秒级出结果。
 
 ## 网络与镜像
