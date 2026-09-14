@@ -10,6 +10,16 @@ node_modules/
 deploy/.env
 .reasonix/
 temp/
+# 构建与测试产物（各仓库 gitignore，图谱同样不入；工作区以 --no-gitignore 运行，须在此显式排除）
+coverage/
+dist/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+allure-results/
+allure-report/
 # 产品仓库根的 bms文档 基座软链（→ ../bms/bms文档），避免基座被重复扫描入库
 # 注意：仅匹配产品仓库根软链，勿用 */bms文档/（会连 bms/bms文档 真实基座一并排除）
 biz/bms文档/
