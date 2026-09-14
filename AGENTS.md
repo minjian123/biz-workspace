@@ -49,7 +49,7 @@
 规则：
 
 - 代码库相关问题，当 `graphify-out/graph.json` 存在时，先运行 `graphify query "<问题>"`（可直接用中文）。关系用 `graphify path "<A>" "<B>"`，概念用 `graphify explain "<概念>"`。返回的是范围受限的子图，通常比 GRAPH_REPORT.md 或原始 grep 输出小得多。
-- 修改文档或设计节点后，在**工作区根**运行 `graphify update .` 保持图谱最新（纯 AST，无 API 开销）；排除规则见 `.graphifyignore`（改动排除项后用 `--force` 修剪）；随后运行 `python3 bms/scripts/tools/graphify/localize-graph.py` 收尾（汉化 graph.html + 生成中文架构图 CALLFLOW.html）。
+- **按需更新（默认不自动更新）**：知识图谱**仅在用户明确要求时**更新——在**工作区根**运行 `graphify update .`，随后运行 `python3 bms/scripts/tools/graphify/localize-graph.py` 收尾（汉化 graph.html + 生成中文架构图 CALLFLOW.html）；**不在每次文档 / 代码变更或提交后自动更新**（图谱随规模增长耗时渐增）。排除规则见 `.graphifyignore`（改动排除项后用 `--force` 修剪）。
 - 若 `graphify-out/wiki/index.md` 存在，用它做广域导航，避免直接浏览源码。
 - 仅在需要宏观架构审查、或 query/path/explain 信息不足时，才读 `graphify-out/GRAPH_REPORT.md`。
 - graphify 安装、排除规则、重建取舍、社区命名等细节见 `bms/bms文档/资料/AI/graphify部署使用说明.md`，不在此展开。
