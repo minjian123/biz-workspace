@@ -11,7 +11,7 @@
 - **同步靠各自 git 远端**：改动任一处 bms 克隆 → 提交推送 → 其他工作区的 `bms/` 克隆 `git pull` 自然更新，合并与冲突走 git 机制；产品仓库同理。**没有文档同步脚本**（原 base-sync 机制已退役）。
 - **产品仓库只放产品专属内容**：产品文档根按项目命名（如 `biz文档/`、`cw文档/`），不再在文档根下用软链占位基座目录（`规范`/`资料`/`资源`）；各产品仓库根设软链 `bms文档 → ../bms/bms文档` 与产品文档根并排，产品文档引用基座统一用 `../bms文档/…`。通过该软链编辑基座文件时，实际修改的是 bms 克隆，须回 bms 仓库提交。
 - **测试资产放独立仓库 `test/`（可选克隆）**：承载用例模板、测试数据、压测场景、探索性测试记录与测试侧脚本，文档根 `test文档/`（与 `bms文档/`、`biz文档/` 同构）；**双向软链且两侧均不入 git**——`bms/test文档 → ../test/test文档`（**bms 仓根**，与 `bms文档/` 同级）、`test/bms文档 → ../bms/bms文档`（test 仓根）。bms 侧软链已写 `bms/.gitignore`，test 侧 `.gitignore` 忽略 `bms文档`。**bms 文档正文禁止写真链接指向测试文档**（CI 只 clone bms 会判断链），需提及时写纯文本路径。边界详见 bms《测试规范》「测试资产落点与组织」节：被流水线直接调用的脚本（`check-base.py`、`check-status.py`、`defect/*`、`governance/*`）留在 `bms/scripts/tools/` 不迁。
-- 工作区根目录本身是一个 **git 仓库**，只跟踪工作区配置（`AGENTS.md`、`README.md`、`.opencode/`、`.graphifyignore`、`.gitignore`、`.vscode/`、`*.code-workspace`）；`bms/`、产品目录、`graphify-out/` 一律忽略。新工作区可先克隆本配置仓库，再在其内克隆 bms 与产品仓库；扩展新组合只需在工作区根新增产品仓库克隆（bms 保持平级不动）。
+- 工作区根目录本身是一个 **git 仓库**，只跟踪工作区配置（`AGENTS.md`、`README.md`、`scripts/`、`.opencode/`、`.graphifyignore`、`.gitignore`、`.vscode/`、`*.code-workspace`）；`bms/`、产品目录、`graphify-out/` 一律忽略。新工作区可先克隆本配置仓库，再运行 `scripts/tools/workspace/搭建工作区.sh`（或 `搭建工作区.bat`，用法见 `README.md`「从零搭建工作区」节）自动克隆各仓库并建软链；扩展新组合只需在工作区根新增产品仓库克隆（bms 保持平级不动）。
 - IDE 使用：用工作区根的 `*.code-workspace` 打开（「工作区配置 / BMS 基座 / 产品」多根并置）；产品文档以产品仓库根的 `bms文档` 软链引用基座，权威基座文档统一从 BMS 根查看。
 - 目录使用中文名；文档根按项目命名（bms 为 `bms文档/`、产品为 `<产品>文档/`，如 `biz文档/`、`cw文档/`）；回复与文档保持中文。
 
