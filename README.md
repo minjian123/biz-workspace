@@ -43,14 +43,14 @@
 
 - `AGENTS.md`：工作区级 AI 协作约定（唯一一份，含 bms 工具链、后台任务执行、镜像、讨论确认与提交流程；产品仓库不单设）。
 - `graphify-out/`：工作区级知识图谱，覆盖 `bms/` 与产品仓库；查询 `graphify query "<问题>"`；图谱更新**仅在用户要求时**执行（工作区根 `graphify update .` + `python3 bms/scripts/tools/graphify/localize-graph.py` 收尾），默认不随变更自动更新。
-- 开发工具链（bg 后台执行器、wol 电源控制、defect 缺陷工具等）在 `bms/scripts/tools/`。
+- 开发工具链（bg 后台执行器、wol 电源控制、defect 缺陷工具、base-check 基座自检与 check-links 链接自洽校验等）在 `bms/scripts/tools/`。
 
 ## 5. 扩展新产品 / 新工作区
 
 1. **新建工作区**：克隆工作区配置仓库（或按本 README 建立配置），在工作区根克隆 `bms` 仓库。
 2. **加产品**：在工作区根克隆对应产品仓库，产品仓库根建软链 `bms文档 → ../bms/bms文档` 并排引用基座（机制详见 bms《平台可扩展性规划》4.3）。
 3. **加测试资产（按需）**：在工作区根克隆测试仓 `test`，建双向软链（`bms/test文档`、`test/bms文档`），并在 `*.code-workspace` 的 folders 加入 `test`。
-3. **纳入图谱（按需）**：需要时在工作区根运行 `graphify update .`（默认不自动更新）。
+4. **纳入图谱（按需）**：需要时在工作区根运行 `graphify update .`（默认不自动更新）。
 
 ## 6. 注意
 
