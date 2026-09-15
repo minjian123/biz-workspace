@@ -2,12 +2,14 @@
   "folders": [
     { "path": ".", "name": "工作区（配置）" },
     { "path": "bms", "name": "BMS 基座/平台" },
-    { "path": "biz", "name": "biz 产品" }
+    { "path": "biz", "name": "biz 产品" },
+    { "path": "test", "name": "测试资产" }
   ],
   "settings": {
     "files.exclude": {
       "bms": true,
       "biz": true,
+      "test": true,
       "graphify-out": true,
       "**/node_modules": true
     }

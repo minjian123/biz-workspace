@@ -20,10 +20,12 @@ __pycache__/
 htmlcov/
 allure-results/
 allure-report/
-# 产品仓库根的 bms文档 基座软链（→ ../bms/bms文档），避免基座被重复扫描入库
-# 注意：仅匹配产品仓库根软链，勿用 */bms文档/（会连 bms/bms文档 真实基座一并排除）
+# 各仓库根的跨仓软链（双向），避免同一内容被重复扫描入库
+# 注意：仅匹配仓库根软链，勿用 */bms文档/ 或 */test文档/（会连真实目录一并排除）
 biz/bms文档/
 cw/bms文档/
+test/bms文档/
+bms/test文档/
 # 第三方静态资源库（mermaid/压缩 JS/CSS 等）与原型共享资源，避免英文函数名节点刷屏
 */bms文档/资源/
 */biz文档/资源/
