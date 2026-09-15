@@ -1,8 +1,7 @@
 # 工作区 git 仓库：只跟踪工作区配置文件，其余全部忽略
-# bms/ 与各产品仓库目录由各自的 git 管理；graphify-out/ 为运行时产物
+# bms/ 与各产品仓库目录由各自的 git 管理
 /*
 !/.gitignore
-!/.graphifyignore
 !/.opencode/
 !/.vscode/
 !/AGENTS.md

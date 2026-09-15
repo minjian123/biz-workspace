@@ -11,7 +11,7 @@
 - **同步靠各自 git 远端**：改动任一处 bms 克隆 → 提交推送 → 其他工作区的 `bms/` 克隆 `git pull` 自然更新，合并与冲突走 git 机制；产品仓库同理。**没有文档同步脚本**（原 base-sync 机制已退役）。
 - **产品仓库只放产品专属内容**：产品文档根按项目命名（如 `biz文档/`、`cw文档/`），不再在文档根下用软链占位基座目录（`规范`/`资料`/`资源`）；各产品仓库根设软链 `bms文档 → ../bms/bms文档` 与产品文档根并排，产品文档引用基座统一用 `../bms文档/…`。通过该软链编辑基座文件时，实际修改的是 bms 克隆，须回 bms 仓库提交。
 - **测试资产放独立仓库 `test/`（可选克隆）**：承载用例模板、测试数据、压测场景、探索性测试记录与测试侧脚本，文档根 `test文档/`（与 `bms文档/`、`biz文档/` 同构）；**双向软链且两侧均不入 git**——`bms/test文档 → ../test/test文档`（**bms 仓根**，与 `bms文档/` 同级）、`test/bms文档 → ../bms/bms文档`（test 仓根）。bms 侧软链已写 `bms/.gitignore`，test 侧 `.gitignore` 忽略 `bms文档`。**bms 文档正文禁止写真链接指向测试文档**（CI 只 clone bms 会判断链），需提及时写纯文本路径。边界详见 bms《测试规范》「测试资产落点与组织」节：被流水线直接调用的脚本（`check-base.py`、`check-status.py`、`defect/*`、`governance/*`）留在 `bms/scripts/tools/` 不迁。
-- 工作区根目录本身是一个 **git 仓库**，只跟踪工作区配置（`AGENTS.md`、`README.md`、`scripts/`、`.opencode/`、`.graphifyignore`、`.gitignore`、`.vscode/`、`*.code-workspace`）；`bms/`、产品目录、`graphify-out/` 一律忽略。新工作区可先克隆本配置仓库，再运行 `scripts/tools/workspace/搭建工作区.sh`（或 `搭建工作区.bat`，用法见 `README.md`「从零搭建工作区」节）自动克隆各仓库并建软链；扩展新组合只需在工作区根新增产品仓库克隆（bms 保持平级不动）。
+- 工作区根目录本身是一个 **git 仓库**，只跟踪工作区配置（`AGENTS.md`、`README.md`、`scripts/`、`.opencode/`、`.gitignore`、`.vscode/`、`*.code-workspace`）；`bms/`、产品目录一律忽略。新工作区可先克隆本配置仓库，再运行 `scripts/tools/workspace/搭建工作区.sh`（或 `搭建工作区.bat`，用法见 `README.md`「从零搭建工作区」节）自动克隆各仓库并建软链；扩展新组合只需在工作区根新增产品仓库克隆（bms 保持平级不动）。
 - IDE 使用：用工作区根的 `*.code-workspace` 打开（「工作区配置 / BMS 基座 / 产品」多根并置）；产品文档以产品仓库根的 `bms文档` 软链引用基座，权威基座文档统一从 BMS 根查看。
 - 目录使用中文名；文档根按项目命名（bms 为 `bms文档/`、产品为 `<产品>文档/`，如 `biz文档/`、`cw文档/`）；回复与文档保持中文。
 
@@ -20,7 +20,7 @@
 - BMS（基础管理系统）定位平台：后端管理用途；当前尚未有源代码，规划已定案——技术栈、功能模块、开发计划与验收标准见 `bms/bms文档/规划/项目规划说明.md`，动手写代码前先读该文件。
 - 入口文档：`bms/README.md`（导航）、`bms/bms文档/文档首页.md`（全量导航）、`bms/bms文档/规划/平台可扩展性规划.md`（三层模型、业务不入平台、工作区模型）。
 - 平台机制、扩展接入流程、标识符（表前缀/业务码/错误码段/事件域）登记以 bms 文档为权威；基座边界见 `bms/bms文档/基座文档清单.md`。
-- `.opencode/` 中 graphify 安装脚本生成的产物（plugins/graphify.js 等）勿手动修改；`opencode.json` 的 plugin 数组登记自定义插件，MCP server 走 `opencode.json` 的 `mcp` 段登记。`.reasonix/`、reasonix.toml 由 IDE 工具生成——勿手动修改。
+- `.opencode/` 下的插件按各自说明维护（勿手改生成物）；`opencode.json` 的 `plugin` 数组登记自定义插件，MCP server 走 `opencode.json` 的 `mcp` 段登记。`.reasonix/`、reasonix.toml 由 IDE 工具生成——勿手动修改。
 
 ## 开发环境与远程操作（脚本在 `bms/scripts/tools/`）
 
@@ -43,45 +43,6 @@
 - 项目内全部命名（代码、数据库、API、基础设施）遵循 `bms/bms文档/规范/命名规范.md`。
 - **公开文档红线**：随仓库推送到 GitHub 的文档（README.md、LICENSE 等）不得出现本地资源信息——开发服务器/开发机名称、内网 IP、端口、磁盘与目录、SSH/服务账号等一律不写，只保留泛化描述并指向本地文档（如《开发服务器部署使用说明总览》）；本地资源细节只允许存在于已 gitignore 的凭据文档与内网部署文档中。
 
-## graphify（工作区级知识图谱）
-
-工作区通过知识图谱（`graphify-out/`，位于工作区根）辅助代码理解与架构分析，图谱覆盖 `bms/` 与各产品仓库，已启用中文查询分词。
-
-规则：
-
-- **代码结构、调用关系、宏观架构**类问题（以及其它代码库相关问题），当 `graphify-out/graph.json` 存在时，先运行 `graphify query "<问题>"`（可直接用中文）——**query 先探名、再钻取**：关系用 `graphify path "<A>" "<B>"`（有向无路时加 `--undirected`）、概念用 `graphify explain "<概念>"`（两者节点名需精确匹配，先用 query 拿到）。返回的是范围受限的子图，通常比 GRAPH_REPORT.md 或原始 grep 输出小得多；宽泛多词查询会散、必要时提高 `--budget`（细节见《graphify 部署使用说明》「查询实战要点（实测）」节）。
-- **按需更新（默认不自动更新）**：知识图谱**仅在用户明确要求时**更新——在**工作区根**运行 `graphify update .`，随后运行 `python3 bms/scripts/tools/graphify/localize-graph.py` 收尾（汉化 graph.html + 生成中文架构图 CALLFLOW.html）；**不在每次文档 / 代码变更或提交后自动更新**（图谱随规模增长耗时渐增）。排除规则见 `.graphifyignore`（改动排除项后用 `--force` 修剪）。
-- 若 `graphify-out/wiki/index.md` 存在，用它做广域导航，避免直接浏览源码。
-- 仅在需要宏观架构审查、或 query/path/explain 信息不足时，才读 `graphify-out/GRAPH_REPORT.md`。
-- graphify 安装、排除规则、重建取舍、社区命名等细节见 `bms/bms文档/资料/AI/graphify部署使用说明.md`，不在此展开。
-
-## 缺陷工具链（defect）
-
-CI 自动化测试失败时的缺陷处理工具链在 `bms/scripts/tools/defect/`（流程与口径详见 bms《测试规范》第 9 节）：
-
-- `defect_capture.py`：归档 REPRO 复现包（现场 dump + 失败堆栈 + repro.json + REPRO.md，归档目录见 bms《测试规范》/工具脚本说明）并自动创建/复用 GitLab Issue（fingerprint 去重、`defect-auto` 标签）。
-- `ai_fix.py`：AI 修复代理——扫描 defect-auto 未关闭 Issue 定位根因生成补丁，本地模型（LM Studio）优先、云端兜底；bot 推 `fix/defect-*` 分支提 MR，**人工 review 合入、人工关闭**。
-- `reproduce.py`：按 commit 检出 + dump 导入 + 跑用例的一键复现验证。
-
-## 设计文档编号重排（reorder-design）
-
-调整设计文档体系节点编号时**勿手动改名**，用 `bms/scripts/tools/reorder-design/reorder-design.py`：阅读顺序定义在同目录 `order.json`（产品仓库自带自己的 order.json）；自动完成两步法重命名 + 全库引用替换（支持 md 与 html）；先 `--dry-run` 预览再执行；md 总览的节点表行序不自动排序，执行后人工核对。
-
-## 后台任务执行（BG，强制执行）
-
-**背景**：bash 工具是同步阻塞的，长命令执行期间无反馈，观感"卡死"。因此对命令做分级处理，禁止长时间无反馈等待。
-
-- 工具链在 `bms/scripts/tools/bg/`（bg-run/bg-status/bg-stop/bg-wait.py），插件文件为 `.opencode/plugins/bg.js`（注册 `bg_run` / `bg_status` / `gl_watch_pipeline` / `bg_stop` 四个工具；python 脚本留在 bms，插件内按相对路径调用）。
-- **执行纪律**：
-  - 预计 **≤10 秒**的命令（查询、状态、文件操作、短命令）：直接执行。
-  - 预计 **>10 秒**的命令（下载、安装、构建、ssh 远程、服务启动、备份等）：一律 **`bg_run` 后台化** → 立即返回 → 用 **`bg_status` 秒级轮询**（间隔 10-30 秒）直到 FINISHED；绝不直接同步等待、绝不阻塞挂起等待。
-  - GitLab 流水线结果用 **`gl_watch_pipeline`**（内部自动走 bg 链路盯守到终态；凭据读 `bms/deploy/.env` 的 `GITLAB_API_*`），不手动拼 API 轮询。
-  - 不写长 `Start-Sleep` 等待；探测服务就绪用短超时（2-3 秒）轮询。
-  - 调用 `.cmd/.bat` 批处理或 npx 时注意输出缓冲（PowerShell 管道要等进程退出才吐输出），必要时绕开包装直接用可执行文件。
-  - **workdir 坑**：opencode 插件进程 cwd 是 `$HOME`，`bg_run` 不带 `workdir` 时命令落在 `$HOME` 而非工作区。凡依赖仓库相对路径的命令（如 `graphify update .`、`python3 bms/scripts/...`），`bg_run` 必须显式传 `workdir`（工作区根或对应仓库的绝对路径）；误在 `$HOME` 生成 `graphify-out/` 需手动删除。
-- 状态文件默认用户目录下 `.bg/`（`-Base` 可覆盖）；任务按 `-Name` 区分，同名会覆盖。
-- 示例：`bg_run {name: 远程磁盘, command: "ssh <账号>@<mjbk-IP> df -h"}` → 立即返回；`bg_status {name: 远程磁盘}` → 秒级出结果。
-
 ## 网络与镜像
 
 - 涉及软件、组件、依赖、容器镜像等下载安装时，**优先使用国内镜像**（阿里云、清华 TUNA、中科大、华为云等），默认源访问不畅时立即切换镜像，不长时间等待。
@@ -103,7 +64,7 @@ CI 自动化测试失败时的缺陷处理工具链在 `bms/scripts/tools/defect
 
 ## 提交与推送
 
-- **每个仓库独立提交**：bms 仓库、各产品仓库、工作区仓库分别提交；工作区仓库只提交配置文件（`AGENTS.md`、`README.md`、`.opencode/`、`.graphifyignore`、`.gitignore`、`.vscode/`、`*.code-workspace`）。
+- **每个仓库独立提交**：bms 仓库、各产品仓库、工作区仓库分别提交；工作区仓库只提交配置文件（`AGENTS.md`、`README.md`、`.opencode/`、`.gitignore`、`.vscode/`、`*.code-workspace`）。
 - **不要擅自提交**（git commit），也不要擅自推送（git push）；完成工作后询问用户是否提交，得到明确指令后再执行。
 - 用户说"提交"才提交；用户说"推送"（或确认推远程）才推送；不确定时继续询问，不猜测意图。
 - 提交信息遵循《命名规范》：`type(scope): 中文描述`；只暂存本次任务相关文件，不夹带无关改动。

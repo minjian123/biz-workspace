@@ -10,7 +10,6 @@
       "bms": true,
       "biz": true,
       "test": true,
-      "graphify-out": true,
       "**/node_modules": true
     }
   }

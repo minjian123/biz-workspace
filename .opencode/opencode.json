@@ -1,13 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": [
-    ".opencode/plugins/graphify.js"
-  ],
   "model": "llamacpp/qwen3.8-27b-ud-q4-k-m",
   "provider": {
     "lmstudio": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "\u672c\u5730\u591a\u6a21\u6001\uff08LM Studio\uff09",
+      "name": "本地多模态（LM Studio）",
       "options": {
         "baseURL": "http://127.0.0.1:1234/v1",
         "apiKey": "local"
@@ -15,7 +12,7 @@
       "models": {
         "qwen3.8-27b": {
           "id": "qwen/qwen3.8-27b",
-          "name": "qwen3.8-27b \u672c\u5730\u591a\u6a21\u6001",
+          "name": "qwen3.8-27b 本地多模态",
           "limit": {
             "context": 262144,
             "output": 262144
@@ -40,7 +37,7 @@
     },
     "llamacpp": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "\u672c\u5730\uff08llama.cpp\uff09",
+      "name": "本地（llama.cpp）",
       "options": {
         "baseURL": "http://127.0.0.1:8080/v1",
         "apiKey": "local"

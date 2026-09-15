@@ -1,6 +1,6 @@
 # 工作区 README
 
-> 工作区（组合层）：以 **bms 克隆**为基座，与一个或多个**产品仓库克隆**平级并置；AI 工作区（AGENTS、.opencode、知识图谱）位于工作区根
+> 工作区（组合层）：以 **bms 克隆**为基座，与一个或多个**产品仓库克隆**平级并置；AI 工作区（AGENTS、.opencode）位于工作区根
 
 ## 1. 定位与组合
 
@@ -19,9 +19,7 @@
 ├── scripts/             # 工作区工具链（tools/ 下按工具分目录）
 │   └── tools/workspace/ # 一键搭建（setup_workspace.py + 搭建工作区.sh/.bat）
 ├── .opencode/           # AI 工作区配置（插件、模型、MCP 登记）
-├── .graphifyignore      # 知识图谱排除规则
-├── .gitignore           # 工作区仓库忽略规则（bms/产品目录/图谱产物等）
-├── graphify-out/        # 工作区级知识图谱（bms + 各产品；运行时产物不入库）
+├── .gitignore           # 工作区仓库忽略规则（bms/产品目录等）
 ├── bms/                 # BMS 平台/基座（权威源克隆，独立 git 仓库）
 │   ├── bms文档/          # 平台文档（权威）
 │   └── test文档 -> ../test/test文档   # 测试资产软链（含在 .gitignore，不入库）
@@ -41,17 +39,16 @@
   双向软链**均不入 git**：`bms/test文档 → ../test/test文档`（bms 仓根，与 `bms文档/` 同级）、`test/bms文档 → ../bms/bms文档`（test 仓根）。
   **bms 文档正文不写真链接指向测试文档**（CI 只 clone bms 会判断链），仅写纯文本路径。被流水线调用的脚本仍留 `bms/scripts/tools/`。
 
-## 4. AI 工作区与知识图谱
+## 4. AI 工作区
 
 - `AGENTS.md`：工作区级 AI 协作约定（唯一一份，含 bms 工具链、后台任务执行、镜像、讨论确认与提交流程；产品仓库不单设）。
-- `graphify-out/`：工作区级知识图谱，覆盖 `bms/` 与产品仓库；查询 `graphify query "<问题>"`；图谱更新**仅在用户要求时**执行（工作区根 `graphify update .` + `python3 bms/scripts/tools/graphify/localize-graph.py` 收尾），默认不随变更自动更新。
 - 开发工具链（bg 后台执行器、wol 电源控制、defect 缺陷工具、base-check 基座自检与 check-links 链接自洽校验等）在 `bms/scripts/tools/`。
 
 ## 5. 从零搭建工作区
 
 > 以当前 bizs（`bms` + `biz` + `test`）为例；其他组合（如 cws = `bms` + `cw`）把产品仓参数换成对应仓库即可。
 
-前置条件：Linux（软链以 Linux 为准）、`git`、Python 3。opencode / graphify 等 AI 工具链按需另装，脚本只检测并提示。
+前置条件：Linux（软链以 Linux 为准）、`git`、Python 3。opencode 等 AI 工具链按需另装，脚本只检测并提示。
 
 1. 克隆本配置仓库（远端地址以 GitLab 导航或本地凭据文档为准）：
 
@@ -87,7 +84,7 @@
 
 4. 后续（可选）：
    - 凭据：各仓库 `deploy/.env` 复制自 `deploy/.env.example` 并填值（已 gitignore，凭据见 bms《本地资源》，不入库）。
-   - AI 工作区：opencode / graphify 安装见 bms《AI开发规范》与《开发机部署使用说明总览》；图谱按需更新（见第 4 节）。
+   - AI 工作区：opencode 安装见 bms《AI开发规范》与《开发机部署使用说明总览》。
    - 测试资产落点与边界见 bms《测试规范》「测试资产落点与组织」节。
 
 ## 6. 扩展新产品 / 新工作区
@@ -95,7 +92,6 @@
 1. **新建工作区**：克隆工作区配置仓库后，按「从零搭建工作区」节用一键脚本或手动命令搭建。
 2. **加产品**：在工作区根克隆对应产品仓库，产品仓库根建软链 `bms文档 → ../bms/bms文档` 并排引用基座（机制详见 bms《平台可扩展性规划》4.3）。
 3. **加测试资产（按需）**：在工作区根克隆测试仓 `test`，建双向软链（`bms/test文档`、`test/bms文档`），并在 `*.code-workspace` 的 folders 加入 `test`。
-4. **纳入图谱（按需）**：需要时在工作区根运行 `graphify update .`（默认不自动更新）。
 
 ## 7. 注意
 
