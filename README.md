@@ -99,4 +99,6 @@
 - 产品仓库根的 `bms文档` 基座软链接在 GitLab/GitHub 网页端与 Windows 克隆下不可用，文档工作区以 Linux 为准。
 - 平台机制、扩展接入与标识符登记以 `bms/bms文档/` 为权威；协作规则先读 `AGENTS.md`。
 
+> 许可证：MIT（见 [`LICENSE`](LICENSE)），与 `bms/` / `biz/` 仓库保持一致。
+>
 > 依《文档生成规范》编写 · 工作区配置仓库
