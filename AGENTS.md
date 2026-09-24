@@ -33,6 +33,15 @@
   - 凭据从 `bms/deploy/.env` 读取（键位见 `bms/deploy/.env.example`），脚本不硬编码密码；SSH 连接走开发机公钥免密。
 - 机器凭据见 bms `bms文档/用户文档/本地资源.md`（已 gitignore，**勿恢复跟踪、勿提交、勿写入其他文档**）；凭据副本统一存各仓库 `deploy/.env`（已 gitignore，勿提交，勿将 .env 内容写入其他文档）。
 
+## 依赖管理（前端 pnpm / 后端 uv，统一外置）
+
+- **依赖不进仓库树**：前端 node_modules（根 + 各 workspace 工程）整体外置到本地依赖仓，原位是符号链接；后端 .venv 经 `UV_PROJECT_ENVIRONMENT` 外置。检索工具默认不跟随符号链接 → 检索零污染。
+- **本地依赖仓位置**：环境变量 `DEPS_DIR` > `bms/deploy/.env` 的 `DEPS_DIR=` > 默认 `$HOME/dev-deps/bms`（本地资源路径，勿写入公开文档/仓库文件）。
+- **维护脚本** `bms/scripts/tools/deps/`：`外置依赖.sh`（外置态，推荐常驻）、`还原依赖.sh`（pnpm install 前必须还原，安装器见符号链接会误判跳过）、`重装依赖.sh`（还原 → 安装 → 再外置；`--frontend-only` / `--backend-only`）。
+- **pnpm 单一 workspace**：`bms/pnpm-workspace.yaml` 收敛 `frontend/packages/*`、`frontend/apps/*`、`frontend/modules/*`；`pnpm-lock.yaml` 单一锁文件（必须提交）；平台基座包用 `workspace:*` 协议。pnpm 11 只读 workspace 里 `allowBuilds`（package.json 的 `pnpm` 字段不读）。
+- **严格依赖树（幽灵依赖零容忍）**：import 了哪个包就在该工程 `package.json` 声明哪个包；`pnpm install --frozen-lockfile` 是唯一安装入口（CI 同口径）。
+- **CI 一体**：前端 job 内 `pnpm install --frozen-lockfile` 现装（镜像不再预置依赖），缓存走 `npm_config_store_dir=/cache/pnpm/store` 等 variables。详见 bms 文档 `bms文档/资料/开发机/pnpm部署使用说明.md` 与 `uv部署使用说明.md`。
+
 ## 文档要求
 
 - **开发流程**：动手前先读《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》——按「本地资源 → 规划 → 规范 → 设计 → 项目 → 需求 → 任务 → 计划 → 详细设计」顺序建立上下文；先设计后编码，实施与测试以详细设计为准，偏差回写设计。
