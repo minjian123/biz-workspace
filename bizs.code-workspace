@@ -6,11 +6,25 @@
     { "path": "test", "name": "测试资产" }
   ],
   "settings": {
+    // 说明：search.exclude 会继承 files.exclude 的全局模式，故不得再用 files.exclude 隐藏 bms/biz/test
+    //（隐藏即等于「从搜索框搜不到」）；同时工作区根 .gitignore 为「全忽略 + 白名单」，需关掉 ignore 文件过滤，
+    // 否则在工作区根这一根下搜索会跳过整个 bms/（含全部代码与文档）。
+    // 代价：Explorer 中 bms/biz/test 会同时以「独立根」与「工作区根下的子目录」两种形态出现。
+    "search.useIgnoreFiles": false,
     "files.exclude": {
-      "bms": true,
-      "biz": true,
-      "test": true,
-      "**/node_modules": true
+      "**/node_modules": true,
+      "**/.venv": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.venv": true,
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "**/.mypy_cache": true,
+      "**/.ruff_cache": true,
+      "**/.pytest_cache": true,
+      "**/.git": true,
+      "**/dist": true
     }
   }
 }
