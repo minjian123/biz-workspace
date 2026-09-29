@@ -1,6 +1,24 @@
 {
   // biz/bms文档 为产品仓库根的基座软链（→ bms/bms文档），内容随 bms 仓库展示，此处隐藏避免重复
   "files.exclude": {
-    "biz/bms文档": true
+    "biz/bms文档": true,
+    "**/node_modules": true,
+    "**/.venv": true
+  },
+  // 检索：工作区根 .gitignore 为「全忽略 + 白名单」（bms/ biz/ test/ 均在忽略内），须关掉 ignore 文件过滤，
+  // 否则在根目录打开（或在工作区根「工作区（配置）」这一根的搜索范围内）搜不到 bms/ 下任何代码与文档。
+  // 噪音改由 search.exclude 显式排除（依赖已物理外置为符号链接，仍显式屏蔽）。
+  // 与 bizs.code-workspace 的 settings 保持一致（双保险：裸目录打开 / 工作区文件打开均生效）。
+  "search.useIgnoreFiles": false,
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.venv": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/.pytest_cache": true,
+    "**/.git": true,
+    "**/dist": true
   }
 }
