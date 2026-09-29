@@ -1,128 +1,103 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "llamacpp/qwen3.8-27b-ud-q4-k-m",
-  "provider": {
+  "providers": {
     "lmstudio": {
-      "npm": "@ai-sdk/openai-compatible",
       "name": "本地多模态（LM Studio）",
-      "options": {
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
         "baseURL": "http://127.0.0.1:1234/v1",
         "apiKey": "local"
       },
       "models": {
         "qwen3.8-27b": {
-          "id": "qwen/qwen3.8-27b",
+          "modelID": "qwen/qwen3.8-27b",
           "name": "qwen3.8-27b 本地多模态",
+          "settings": {
+            "reasoningEffort": "medium"
+          },
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
           "limit": {
             "context": 262144,
             "output": 262144
-          },
-          "options": {
-            "reasoningEffort": "medium"
-          },
-          "tool_call": true,
-          "reasoning": true,
-          "attachment": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
           }
         }
       }
     },
     "llamacpp": {
-      "npm": "@ai-sdk/openai-compatible",
       "name": "本地（llama.cpp）",
-      "options": {
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
         "baseURL": "http://127.0.0.1:8080/v1",
         "apiKey": "local"
       },
       "models": {
         "qwen3.8-27b-ud-q4-k-m": {
           "name": "Qwen3.8-27B-UD-Q4_K_M",
+          "settings": {
+            "reasoningEffort": "high"
+          },
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
           "limit": {
             "context": 262144,
             "output": 131072
-          },
-          "options": {
-            "reasoningEffort": "high"
-          },
-          "tool_call": true,
-          "reasoning": true,
-          "attachment": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
           }
         },
         "qwen3.8-27b-q4-k-m": {
           "name": "Qwen3.8-27B-Q4_K_M（官方标准版）",
+          "settings": {
+            "reasoningEffort": "high"
+          },
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
           "limit": {
             "context": 262144,
             "output": 131072
-          },
-          "options": {
-            "reasoningEffort": "high"
-          },
-          "tool_call": true,
-          "reasoning": true,
-          "attachment": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
           }
         },
         "qwen3.8-27b-uncensored-q4-k-m": {
           "name": "Qwen3.8-27B-Uncensored-Q4_K_M",
+          "settings": {
+            "reasoningEffort": "high"
+          },
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
+          },
           "limit": {
             "context": 262144,
             "output": 131072
-          },
-          "options": {
-            "reasoningEffort": "high"
-          },
-          "tool_call": true,
-          "reasoning": true,
-          "attachment": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
           }
         }
       }
     }
   },
   "mcp": {
-    "mjw-vision": {
-      "type": "local",
-      "command": [
-        "python3",
-        "bms/scripts/tools/vision/mjw_vision_mcp.py"
-      ],
-      "enabled": true
+    "timeout": {
+      "catalog": 200000,
+      "execution": 200000
+    },
+    "servers": {
+      "mjw-vision": {
+        "type": "local",
+        "command": [
+          "python3",
+          "bms/scripts/tools/vision/mjw_vision_mcp.py"
+        ],
+        "disabled": false
+      }
     }
-  },
-  "experimental": {
-    "mcp_timeout": 200000
   }
 }
