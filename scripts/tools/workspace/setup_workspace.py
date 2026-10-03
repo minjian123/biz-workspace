@@ -2,20 +2,23 @@
 """工作区一键搭建脚本（Linux / Windows 通用，软链以 Linux 为准）。
 
 按「配置仓 + bms + 产品仓 + test 测试仓」模型从零搭起工作区：
-克隆仓库（已存在则跳过）、建立三处跨仓软链（`<产品>/bms文档`、
-`bms/test文档`、`test/bms文档`）、最后核对各仓 git 状态与本地待办
-（`deploy/.env`、opencode / graphify 工具链）。
+克隆仓库（已存在则跳过）、建立跨仓软链（各产品仓的 `bms文档`、`bms/test文档`、
+`test/bms文档`，以及主数据等产品互引软链如 `bms/mdm文档`、`biz/mdm文档`）、
+最后核对各仓 git 状态与本地待办（`deploy/.env`、opencode / graphify 工具链）。
 
 用法（在配置仓库根运行）::
 
     scripts/tools/workspace/搭建工作区.sh \
         --bms <bms 远端> \
         --product biz=<biz 远端> \
+        --product mdm=<mdm 远端> \
+        --link mdm=bms \
         --test <test 远端>
 
-    # 远端也可用环境变量（命令行优先）
+    # 远端与互引软链也可用环境变量（命令行优先）
     WS_BMS_REMOTE=<bms 远端> \
-    WS_PRODUCTS="biz=<biz 远端>,cw=<cw 远端>" \
+    WS_PRODUCTS="biz=<biz 远端>,mdm=<mdm 远端>" \
+    WS_LINKS="mdm=bms" \
     WS_TEST_REMOTE=<test 远端> \
     scripts/tools/workspace/搭建工作区.sh
 
@@ -38,6 +41,11 @@ DOC_LINK = "bms文档"
 TO_BMS_DOC = os.path.join("..", "bms", "bms文档")
 TO_TEST_DOC = os.path.join("..", "test", "test文档")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# 产品互引软链：{仓名}=文档根名。为产品仓建「<目标>文档 → ../<目标>/<目标>文档」，
+# 或为 bms 仓建「<目标>文档 → ../<目标>/<目标>文档」（主数据等产品文档反引）。
+# 默认 bizs 组合建「mdm文档」：bms/mdm文档 与 biz/mdm文档 → ../mdm/mdm文档。
+DEFAULT_LINKS = [("bms", "mdm"), ("biz", "mdm")]
 
 errors = 0
 warnings = 0
@@ -100,6 +108,20 @@ def parse_product(value):
     if name in (BMS_NAME, TEST_NAME) or "/" in name or "\\" in name:
         fail(f"产品仓名称不可用：{name}（保留名 bms/test，且不能含路径分隔符）")
     return name, url
+
+
+def parse_link(value):
+    """解析产品互引软链参数「仓名=文档根」：在 <仓名>/ 仓根建 <文档根>文档 → ../<文档根>/<文档根>文档。"""
+    if "=" not in value:
+        fail(f"互引软链参数格式应为「仓名=文档根」，收到：{value}")
+    holder, target = value.split("=", 1)
+    holder, target = holder.strip(), target.strip()
+    if not holder or not target:
+        fail(f"互引软链参数格式应为「仓名=文档根」，收到：{value}")
+    for name in (holder, target):
+        if "/" in name or "\\" in name:
+            fail(f"互引软链名称不能含路径分隔符：{name}")
+    return holder, target
 
 
 def git(args, cwd=None, capture=True):
@@ -227,6 +249,13 @@ def main():
         help="产品仓库远端，可重复传入（或用 WS_PRODUCTS，逗号分隔）",
     )
     parser.add_argument("--test", metavar="远端", help="测试资产仓远端（可选；或用 WS_TEST_REMOTE）")
+    parser.add_argument(
+        "--link",
+        metavar="仓名=文档根",
+        action="append",
+        default=[],
+        help="产品互引软链，可重复传入（或用 WS_LINKS，逗号分隔）；如 mdm=bms 表示 bms 仓根建 mdm文档 → ../mdm/mdm文档",
+    )
     parser.add_argument("--dir", metavar="目录", help="工作区根目录（默认：脚本所在目录）")
     args = parser.parse_args()
 
@@ -243,6 +272,12 @@ def main():
             for value in os.environ["WS_PRODUCTS"].split(",")
             if value.strip()
         ]
+
+    # 产品互引软链：命令行 --link 优先，其次 WS_LINKS，最后默认组合
+    raw_links = args.link
+    if not raw_links and os.environ.get("WS_LINKS", "").strip():
+        raw_links = [v for v in os.environ["WS_LINKS"].split(",") if v.strip()]
+    extra_links = [parse_link(value) for value in raw_links] if raw_links else []
 
     interactive = sys.stdin.isatty() and sys.stdout.isatty()
     if not bms_remote:
@@ -292,6 +327,21 @@ def main():
             else:
                 warnings += 1
                 out("[跳过] test/ 不存在，跳过测试资产软链")
+        # 产品互引软链（如 bms/mdm文档、biz/mdm文档 → ../mdm/mdm文档）
+        for holder, target in extra_links:
+            holder_dir = os.path.join(root, holder)
+            target_doc = f"{target}文档"
+            if not os.path.isdir(holder_dir):
+                warnings += 1
+                out(f"[跳过] {holder}/ 不存在，跳过其 {target_doc} 互引软链")
+                continue
+            if not os.path.isdir(os.path.join(root, target)):
+                warnings += 1
+                out(f"[跳过] {target}/ 不存在，跳过 {holder}/{target_doc} 互引软链")
+                continue
+            rel_link = os.path.join(holder, target_doc)
+            rel_target = os.path.join("..", target, target_doc)
+            ensure_link(root, rel_link, rel_target)
     out()
 
     out("[3/3] 核对")

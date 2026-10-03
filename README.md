@@ -6,7 +6,7 @@
 
 - 本目录是一个**工作区**：以 **bms 克隆**为基座（平台与通用基座权威源），与一个或多个**产品仓库克隆**平级并置。
 - 组合示例（本文件在工作区之间保持同一份）：
-  - `bizs/` = `bms/`（BMS 平台/基座）+ `biz/`（biz 企业运营管理）
+  - `bizs/` = `bms/`（BMS 平台/基座）+ `biz/`（biz 企业运营管理）+ `mdm/`（mdm 主数据管理）
   - `cws/` = `bms/`（BMS 平台/基座）+ `cw/`（CW 创作系统）
 - 工作区本身是一个 **git 仓库**，只跟踪工作区配置；扩展新产品只需在工作区根克隆对应产品仓库（bms 保持平级不动）。
 
@@ -22,12 +22,14 @@
 ├── .gitignore           # 工作区仓库忽略规则（bms/产品目录等）
 ├── bms/                 # BMS 平台/基座（权威源克隆，独立 git 仓库）
 │   ├── bms文档/          # 平台文档（权威）
+│   ├── mdm文档 -> ../mdm/mdm文档  # 主数据文档软链（含在 .gitignore，不入库）
 │   └── test文档 -> ../test/test文档   # 测试资产软链（含在 .gitignore，不入库）
 ├── test/                # 测试资产（独立 git 仓库，可选克隆）
 │   ├── test文档/         # 测试文档
 │   ├── scripts/         # 测试侧脚本
 │   └── bms文档 -> ../bms/bms文档      # 基座软链（不入库）
-├── <产品仓库>/           # 产品仓库克隆（如 biz、cw，各自独立 git 仓库）
+├── <产品仓库>/           # 产品仓库克隆（如 biz、mdm、cw，各自独立 git 仓库）
+│   └── mdm文档 -> ../mdm/mdm文档      # 基座外的产品互引软链（仅 biz 等需引主数据者，不入库）
 └── tmp/                 # 项目临时目录（临时文件 / 截图 / 脚本草稿等，已 gitignore，不入库）
 ```
 
@@ -47,7 +49,7 @@
 
 ## 5. 从零搭建工作区
 
-> 以当前 bizs（`bms` + `biz` + `test`）为例；其他组合（如 cws = `bms` + `cw`）把产品仓参数换成对应仓库即可。
+> 以当前 bizs（`bms` + `biz` + `mdm` + `test`）为例；其他组合（如 cws = `bms` + `cw`）把产品仓参数换成对应仓库即可。
 
 前置条件：Linux（软链以 Linux 为准）、`git`、Python 3。opencode 等 AI 工具链按需另装，脚本只检测并提示。
 
@@ -58,16 +60,19 @@
    cd bizs
    ```
 
-2. 一键搭建（克隆 bms 与产品 / 测试仓、建三处软链、核对）：
+2. 一键搭建（克隆 bms 与产品 / 测试仓、建跨仓软链、核对）：
 
    ```bash
    scripts/tools/workspace/搭建工作区.sh \
      --bms <bms 远端> \
      --product biz=<biz 远端> \
+     --product mdm=<mdm 远端> \
+     --link mdm=bms \      # bms 仓根建「mdm文档 → ../mdm/mdm文档」软链
      --test <test 远端>
    ```
 
-   - 远端也可用环境变量传入（命令行优先）：`WS_BMS_REMOTE`、`WS_PRODUCTS`（如 `biz=<url>,cw=<url>`）、`WS_TEST_REMOTE`。
+   - 远端也可用环境变量传入（命令行优先）：`WS_BMS_REMOTE`、`WS_PRODUCTS`（如 `biz=<url>,mdm=<url>`）、`WS_TEST_REMOTE`。
+   - 主数据互引软链也可用环境变量：`WS_LINKS`（如 `mdm=bms` 表示在 bms 仓根建 `mdm文档 → ../mdm/mdm文档`）。
    - 默认工作区根为配置仓库根（可用 `--dir` 覆盖）；必填项缺失时，交互终端逐项提问；非交互环境（CI / 管道）直接报错。
    - 已存在的目录跳过克隆并纳入核对；软链已正确则跳过，冲突报错并提示人工处理（不静默覆盖）。
    - Windows 入口为 `scripts\tools\workspace\搭建工作区.bat`；软链需开发者模式或管理员权限，文档工作区仍以 Linux 为准。
@@ -77,8 +82,12 @@
    ```bash
    git clone <bms 远端> bms
    git clone <biz 远端> biz
+   git clone <mdm 远端> mdm
    git clone <test 远端> test
    ln -sfn ../bms/bms文档 biz/bms文档
+   ln -sfn ../bms/bms文档 mdm/bms文档
+   ln -sfn ../mdm/mdm文档 biz/mdm文档   # biz 引用 mdm 主数据
+   ln -sfn ../mdm/mdm文档 bms/mdm文档   # bms 引用 mdm 主数据
    ln -sfn ../test/test文档 bms/test文档
    ln -sfn ../bms/bms文档 test/bms文档
    ```
