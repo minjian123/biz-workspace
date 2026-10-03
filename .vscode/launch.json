@@ -14,6 +14,12 @@
   //  - 运行时模块：宿主按 `bms/frontend/apps/desktop/public/modules.json` 加载**发布归档**
   //    （`http://localhost:5002/<模块名>/<版本>/remoteEntry.js`）→ 本地看完整宿主页面须先「发布:模块产物」，
   //    由 `serve-module-releases.mjs` 在 5002 托管；未起 5002 时宿主会落「模块加载失败」兜底页。
+  //  - **「全套」前置依赖**：全套 = 后端单服务 + 宿主 + Chrome；但前端 `/api` 经 vite 代理到 `VITE_API_PROXY`
+  //    （缺省 `http://localhost:8088` 网关），二进**并不直连**（前端经网关按 `service_key` 绕行）。本机无
+  //    8088 网关时，须在 `bms/frontend/apps/desktop/.env.local` 把代理指向可达网关（本地覆盖文件不入库），
+  //    否则前端起来后 `/api` 全 502。后端单服务监听 8000。
+  //  - 5173 端口占用自愈：`vite.config.ts` 为 `strictPort: true`，故 dev 类任务统一 `dependsOn`
+  //    「dev:清理宿主端口（5173）」——先清理**本项目**旧宿主 dev（cwd 校验，非本项目占用则中止）。
   "version": "0.2.0",
   "configurations": [
     // ── 前端 ────────────────────────────────────────────────────────────────
