@@ -20,5 +20,22 @@
     "**/.pytest_cache": true,
     "**/.git": true,
     "**/dist": true
-  }
+  },
+  // Python 后端：解释器与分析根（双保险——裸目录打开时 `bms/.vscode/settings.json` 不生效，
+  // 故此处按 `bms/` 前缀再声明一份；缺失会导致 basedpyright/Pylance 回落系统 Python，
+  // 满屏「无法解析导入 sqlalchemy」类报错）。
+  "python.defaultInterpreterPath": "bms/backend/.venv/bin/python",
+  "python.analysis.extraPaths": ["bms/backend"],
+  // Python 类型检查：与项目门禁同口径 —— `basedpyright` 默认 `recommended` 档会把项目
+  // **本就不检查**的 `alembic/versions/**`（项目 `[tool.pyright] include` 只含 libs/services）
+  // 报成一片风格问题；此处指向项目 pyproject.toml，并忽略 alembic 迁移脚本。
+  "basedpyright.analysis.configFilePath": "bms/backend/pyproject.toml",
+  // alembic 迁移不在项目 `[tool.pyright] include`（只含 libs/services）内，但 basedpyright 会分析
+  // 「打开的文件」，故用 ignore（抑制诊断）+ exclude 双保险；路径给足多种形式，避免基准差异未命中。
+  "basedpyright.analysis.ignore": [
+    "alembic",
+    "bms/backend/alembic",
+    "**/alembic/**"
+  ],
+  "basedpyright.analysis.exclude": ["alembic", "bms/backend/alembic", "**/alembic/**"]
 }
