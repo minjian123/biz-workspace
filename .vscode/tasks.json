@@ -1,0 +1,149 @@
+{
+  // bizs 工作区根 · 任务（供「运行任务」与 launch.json 的 preLaunchTask 使用）
+  //
+  // 位置说明（与 bms/.vscode 的关系）：
+  //  - 本文件作用于「工作区根」（裸目录打开 /home/minjian/develop/bizs，或工作区文件 bizs.code-workspace
+  //    的「工作区（配置）」根）；`bms/.vscode/tasks.json` 是同一套任务的 bms 版本（供 bms 单根打开时用）。
+  //  - VS Code 不支持跨根继承配置，故两处内容必须同步维护（与根 `settings.json` 的「双保险」约定同口径）：
+  //    两处差异仅在于路径前缀（此处为 `bms/...`，bms 处为无前缀）。
+  //  - 一律用 shell + 显式 `pnpm` / `node` / `python3` / `uv`（不依赖 IDE 的 npm 任务探测，避免落到 npm）；
+  //  - dev / 服务类任务为**后台任务**：以日志关键字为就绪信号（`preLaunchTask` 需据此判断可继续）；
+  //    「问题匹配器」正则刻意不匹配任何行，避免把日志灌进「问题」面板。
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev:宿主（5173）",
+      "detail": "BMS 宿主 PC 管理端 Vite 开发服务器（/api 代理默认 http://localhost:8088，可用 VITE_API_PROXY 覆盖）",
+      "type": "shell",
+      "command": "pnpm dev",
+      "options": { "cwd": "${workspaceFolder}/bms/frontend/apps/desktop" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "owner": "bizs-vite-desktop",
+        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v",
+          "endsPattern": "Local:\\s+https?://"
+        }
+      }
+    },
+    {
+      "label": "dev:宿主 + 模块产物（5002 + 5173）",
+      "detail": "确保 5002 发布存储服务在跑（缺则后台拉起），再起宿主 dev —— 宿主加载运行时模块的前置组合",
+      "type": "shell",
+      "command": "pgrep -f 'serve-module-releases.mjs' >/dev/null || (nohup node \"${workspaceFolder}/bms/frontend/scripts/serve-module-releases.mjs\" > /tmp/bms-serve-releases.log 2>&1 &); sleep 1; cd \"${workspaceFolder}/bms/frontend/apps/desktop\" && pnpm dev",
+      "options": { "cwd": "${workspaceFolder}/bms" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "owner": "bizs-vite-desktop-with-modules",
+        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v",
+          "endsPattern": "Local:\\s+https?://"
+        }
+      }
+    },
+    {
+      "label": "服务:模块产物（5002 · CORS 静态）",
+      "detail": "托管 bms/frontend/releases/**（URL 即 /<模块名>/<版本>/remoteEntry.js，与清单同构，带 CORS）",
+      "type": "shell",
+      "command": "node frontend/scripts/serve-module-releases.mjs",
+      "options": { "cwd": "${workspaceFolder}/bms" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "owner": "bizs-module-releases",
+        "pattern": [{ "regexp": "^\\[bizs-mreleases\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "module-releases",
+          "endsPattern": "模块入口形如"
+        }
+      }
+    },
+    {
+      "label": "发布:模块产物（demo + sample · 构建 + 发布）",
+      "detail": "构建并发布两个运行时模块到 bms/frontend/releases/（归档不入库；同版本重发用 --force）",
+      "type": "shell",
+      "command": "pnpm --filter @bms/module-demo run build && pnpm --filter @bms/module-sample run build && node frontend/scripts/release-module.mjs publish --module demo --force && node frontend/scripts/release-module.mjs publish --module sample --force",
+      "options": { "cwd": "${workspaceFolder}/bms" },
+      "problemMatcher": []
+    },
+    {
+      "label": "dev:模块 demo 独立开发（5002）",
+      "detail": "demo 模块自身 Vite dev（与「服务:模块产物（5002）」互斥——两者都占 5002，且 dev 只服务 /remoteEntry.js）",
+      "type": "shell",
+      "command": "pnpm dev",
+      "options": { "cwd": "${workspaceFolder}/bms/frontend/modules/demo" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "owner": "bizs-vite-module-demo",
+        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v",
+          "endsPattern": "Local:\\s+https?://"
+        }
+      }
+    },
+    {
+      "label": "dev:模块 sample 独立开发（5003）",
+      "detail": "sample 模块自身 Vite dev（独立开发用；宿主加载的是 5002 上的发布归档，不是本服务）",
+      "type": "shell",
+      "command": "pnpm dev",
+      "options": { "cwd": "${workspaceFolder}/bms/frontend/modules/sample" },
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "owner": "bizs-vite-module-sample",
+        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v",
+          "endsPattern": "Local:\\s+https?://"
+        }
+      }
+    },
+    {
+      "label": "检查：前端基座三包（lint + typecheck + 用例）",
+      "detail": "core / api-types / vue / ui-ep 四包检查（bms 根：pnpm run check）",
+      "type": "shell",
+      "command": "pnpm run check",
+      "options": { "cwd": "${workspaceFolder}/bms" },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "检查：前端宿主（lint + vue-tsc + 用例 + 体积预算）",
+      "detail": "bms/frontend/apps/desktop：ESLint + vue-tsc -b + Vitest + 构建体积预算",
+      "type": "shell",
+      "command": "pnpm run lint && pnpm exec vue-tsc -b && pnpm run test && pnpm run build && pnpm run budget",
+      "options": { "cwd": "${workspaceFolder}/bms/frontend/apps/desktop" },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "检查：文档基座（断链 / 越界 / 阶段状态）",
+      "detail": "check-links + check-docs-scope + check-status --stage 06_认证与安全 --strict",
+      "type": "shell",
+      "command": "python3 scripts/tools/base-check/check-links.py && python3 scripts/tools/base-check/check-docs-scope.py && python3 scripts/tools/check-docs/check-status.py --stage 06_认证与安全 --strict",
+      "options": { "cwd": "${workspaceFolder}/bms" },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "检查：后端（ruff + 格式 + pyright）",
+      "detail": "bms/backend：uv run ruff check / ruff format --check / pyright（本地 pyright 依赖外置时可能不可用，CI 兜底）",
+      "type": "shell",
+      "command": "uv run ruff check . && uv run ruff format --check . && uv run pyright",
+      "options": { "cwd": "${workspaceFolder}/bms/backend" },
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

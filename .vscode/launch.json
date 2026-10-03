@@ -1,0 +1,171 @@
+{
+  // bizs 工作区根 · 运行与调试启动项
+  //
+  // 位置说明（与 bms/.vscode 的关系）：
+  //  - 本文件作用于「工作区根」（裸目录打开 /home/minjian/develop/bizs，或工作区文件 bizs.code-workspace
+  //    的「工作区（配置）」根）；`bms/.vscode/launch.json` 是同一套启动项的 bms 版本（供 bms 单根打开时用）。
+  //  - **VS Code 不读取子目录的 `.vscode/`**：把 bizs 作为根打开时，`bms/.vscode/launch.json` 不会出现在
+  //    调试下拉里——这正是此前「运行和调试面板为空」的原因；反之打开 bms 单根时本文件不生效。
+  //  - VS Code 不支持跨根继承，两处内容须同步维护（同根 `settings.json` 的「双保险」约定）；差异仅路径前缀
+  //    （此处 `bms/...`，bms 处无前缀），另：当前文件类启动项此处用 `${file}`（绝对路径），bms 处用 `${relativeFile}`。
+  //  - 前端：js-debug 内置（Node / Chrome）开箱可用；浏览器**首选系统 Google Chrome**（`google-chrome`，
+  //    本机 154.x，已实测支持 --user-data-dir 与远程调试端口）；**备用**改 `chromium`（/snap/bin/chromium）。
+  //  - 后端：`debugpy`（ms-python.debugpy 已装）；服务读 `bms/backend/config.toml` 的 `[server] host/port`（缺省 0.0.0.0:8000）。
+  //  - 运行时模块：宿主按 `bms/frontend/apps/desktop/public/modules.json` 加载**发布归档**
+  //    （`http://localhost:5002/<模块名>/<版本>/remoteEntry.js`）→ 本地看完整宿主页面须先「发布:模块产物」，
+  //    由 `serve-module-releases.mjs` 在 5002 托管；未起 5002 时宿主会落「模块加载失败」兜底页。
+  "version": "0.2.0",
+  "configurations": [
+    // ── 前端 ────────────────────────────────────────────────────────────────
+    {
+      "name": "前端：宿主 dev（Node · Vite）",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "cwd": "${workspaceFolder}/bms/frontend/apps/desktop",
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"],
+      "serverReadyAction": {
+        "pattern": "Local:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "openExternally"
+      }
+    },
+    {
+      "name": "前端：宿主 + Chrome（浏览器断点）",
+      "type": "chrome",
+      "request": "launch",
+      "runtimeExecutable": "google-chrome",
+      "url": "http://localhost:5173/",
+      "webRoot": "${workspaceFolder}/bms/frontend/apps/desktop/src",
+      "preLaunchTask": "dev:宿主（5173）",
+      "sourceMaps": true
+    },
+    {
+      "name": "前端：宿主 + 模块 + Chrome（浏览器断点）",
+      "type": "chrome",
+      "request": "launch",
+      "runtimeExecutable": "google-chrome",
+      "url": "http://localhost:5173/",
+      "webRoot": "${workspaceFolder}/bms/frontend/apps/desktop/src",
+      "preLaunchTask": "dev:宿主 + 模块产物（5002 + 5173）",
+      "sourceMaps": true
+    },
+    {
+      "name": "前端：核对页 + Chrome（选页）",
+      "type": "chrome",
+      "request": "launch",
+      "runtimeExecutable": "google-chrome",
+      "url": "http://localhost:5173/${input:checkPage}",
+      "webRoot": "${workspaceFolder}/bms/frontend/apps/desktop/src",
+      "preLaunchTask": "dev:宿主（5173）",
+      "sourceMaps": true
+    },
+    {
+      // 调试当前打开的用例文件（在编辑器里打开 bms/frontend/apps/desktop/tests/xxx.spec.ts 后 F5）
+      "name": "前端：当前文件单测（Node · Vitest）",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "vitest", "run", "${file}"],
+      "cwd": "${workspaceFolder}/bms/frontend/apps/desktop",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "autoAttachChildProcesses": true
+    },
+    // ── 运行时模块（自身独立开发；宿主联调走 5002 发布归档）──────────────────
+    {
+      "name": "模块：demo 独立开发（5002 · Node）",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "cwd": "${workspaceFolder}/bms/frontend/modules/demo",
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "模块：sample 独立开发（5003 · Node）",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "cwd": "${workspaceFolder}/bms/frontend/modules/sample",
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    // ── 后端（debugpy）──────────────────────────────────────────────────────
+    {
+      "name": "后端：单服务（debugpy · 选服务）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "${input:backendService}",
+      "cwd": "${workspaceFolder}/bms/backend",
+      "python": "${workspaceFolder}/bms/backend/.venv/bin/python",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONUNBUFFERED": "1" }
+    },
+    {
+      // 调试当前打开的后端用例（在编辑器里打开 bms/backend/**/tests/test_*.py 后 F5）
+      "name": "后端：当前文件单测（debugpy · pytest）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-q"],
+      "cwd": "${workspaceFolder}/bms/backend",
+      "python": "${workspaceFolder}/bms/backend/.venv/bin/python",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    }
+  ],
+  "compounds": [
+    {
+      "name": "全套：后端单服务 + 宿主 + Chrome",
+      "configurations": ["后端：单服务（debugpy · 选服务）", "前端：宿主 + Chrome（浏览器断点）"]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "checkPage",
+      "type": "pickString",
+      "description": "选择要调试的开发态核对页（其余核对页把文件名填进 url 即可）",
+      "default": "login-check.html",
+      "options": [
+        "login-check.html",
+        "auth-guard-check.html",
+        "captcha-check.html",
+        "wizard-preference-check.html",
+        "bulk-theme-tenant-check.html",
+        "permission-config-check.html",
+        "org-check.html",
+        "file-check.html",
+        "search-check.html",
+        "notice-check.html",
+        "chart-check.html",
+        "data-display-check.html"
+      ]
+    },
+    {
+      "id": "backendService",
+      "type": "pickString",
+      "description": "选择后端服务模块（对应 bms/backend/services/<域>）",
+      "default": "bms_identity",
+      "options": [
+        "bms_identity",
+        "bms_platform",
+        "bms_tenant",
+        "bms_org",
+        "bms_file",
+        "bms_notification",
+        "bms_search",
+        "bms_ai",
+        "bms_report"
+      ]
+    }
+  ]
+}
