@@ -169,7 +169,8 @@
         "search-check.html",
         "notice-check.html",
         "chart-check.html",
-        "data-display-check.html"
+        "data-display-check.html",
+        "layout-check.html"
       ]
     },
     {
