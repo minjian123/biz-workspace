@@ -21,6 +21,15 @@
   //    而 dev server 其实已经跑起来了。
   //  - **后端 8000 自愈**：`dev:清理后端端口（8000）`（普通任务，非 background）供 `后端：单服务（debugpy ·
   //    选服务）` 的 `preLaunchTask` 复用——重开「全套」不必先手动停上一次调试会话（否则 Address already in use）。
+  //  - **本地裸跑后端＝本机开发主形态**：`dev:后端本地全套（四服务）` 调 `bms/scripts/tools/dev/本地全套.sh up`，
+  //    起 tenant / org / platform / identity 四服务（**同一 8000 端口 + loopback 别名**，与服务基址模板
+  //    `http://{service}:8000` 同形；SQLite 本地库 + 内存缓存，自愈 `/etc/hosts` 别名与 `bms/backend/.dev-keys.local`）。
+  //    **容器 / 开发服务器（mjbk）只在发布验证时用**；停服务用 `dev:后端本地全套·停（四服务）`
+  //    （TERM → 5s → KILL，仍不死则报错交人工）。注意 `清理后端端口.sh 8000 bms/backend` 会连**四服务**一并清掉，
+  //    故起四服务请用上述任务，别再用旧的 `后端：单服务`（只起 1 个服务、且不加载密钥与别名）；
+  //  - **后端断点**：上述任务起的是**后台进程（不带调试器）**——要断点用 launch 的
+  //    「后端：单服务（debugpy · 本机四服务）」（经 `bms/backend/ops/dev_run.py` 注入别名 / 密钥 / Redis）；
+  //    先 `本地全套.sh stop <服务>` 腾出该服务，调试完 `up` 一键补回（**前端断点**用新 compound 即可）；
   "version": "2.0.0",
   "tasks": [
     {
@@ -152,6 +161,25 @@
       "type": "shell",
       "command": "bash \"${workspaceFolder}/bms/scripts/tools/dev/清理宿主端口.sh\" 8000 \"${workspaceFolder}/bms/backend\"",
       "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      // 本机开发主形态：本地裸跑四服务（无需 Docker / mjbk）。脚本幂等（已在监听则跳过），并自愈
+      // /etc/hosts 别名与开发密钥；Redis 缺省指远端开发机 DB5，可用 `BMS_LOCAL_REDIS=...` 覆盖，
+      // 库结构变更后用 `本地全套.sh up --reset-db`（会先备份移走 bms/backend/bms_*.db）。
+      "label": "dev:后端本地全套（四服务）",
+      "detail": "bms/scripts/tools/dev/本地全套.sh up —— tenant/org/platform/identity（127.0.0.2~5:8000，同一端口 + 别名）",
+      "type": "shell",
+      "command": "bash \"${workspaceFolder}/bms/scripts/tools/dev/本地全套.sh\" up",
+      "options": { "cwd": "${workspaceFolder}/bms" },
+      "problemMatcher": []
+    },
+    {
+      "label": "dev:后端本地全套·停（四服务）",
+      "detail": "bms/scripts/tools/dev/本地全套.sh down（TERM → 5s → KILL；仍不死则报错交人工，绝不无限等）",
+      "type": "shell",
+      "command": "bash \"${workspaceFolder}/bms/scripts/tools/dev/本地全套.sh\" down",
+      "options": { "cwd": "${workspaceFolder}/bms" },
       "problemMatcher": []
     },
     {

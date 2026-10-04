@@ -143,12 +143,50 @@
       "python": "${workspaceFolder}/bms/backend/.venv/bin/python",
       "console": "integratedTerminal",
       "justMyCode": false
+    },
+    {
+      // 「全套」的后端成员（本地开发主形态）：由 `bms/scripts/tools/dev/本地全套.sh up` 起**四个**服务
+      // （tenant/org/platform/identity；同一 8000 + loopback 别名，与服务基址模板 http://{service}:8000 同形，
+      // 并加载 `bms/backend/.dev-keys.local` 的开发密钥）。服务是 nohup 后台进程——本终端只承载会话，
+      // 关掉不影响服务；停服务请用任务 `dev:后端本地全套·停（四服务）`。
+      "name": "后端：本地全套（四服务 · 脚本）",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bash \"${workspaceFolder}/bms/scripts/tools/dev/本地全套.sh\" up && exec bash -i",
+      "cwd": "${workspaceFolder}/bms"
+    },
+    {
+      // **后端断点**用本项（「后端：本地全套（四服务 · 脚本）」是脚本起的后台进程，不带调试器）。
+      // 步骤：① `bash bms/scripts/tools/dev/本地全套.sh stop identity` 先腾出要调试的服务；
+      // ② 启动本项（选服务）——由 `bms/backend/ops/dev_run.py` 注入 loopback 别名（127.0.0.2~5）
+      //   + 同一 8000 端口 + `bms/backend/.dev-keys.local` 密钥 + Redis，再 runpy 进服务入口 ⇒
+      //   断点 / 变量 / 调用栈与 `python -m bms_<服务>` 一致（`justMyCode: false`：可步入框架与基座）；
+      // ③ 调试会话停止即服务结束，之后 `本地全套.sh up` 一键补回。
+      "name": "后端：单服务（debugpy · 本机四服务）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "ops.dev_run",
+      "args": ["--service", "${input:backendService}"],
+      "cwd": "${workspaceFolder}/bms/backend",
+      "python": "${workspaceFolder}/bms/backend/.venv/bin/python",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": { "PYTHONUNBUFFERED": "1" }
     }
   ],
   "compounds": [
     {
+      // 旧口径（单后端服务）：后端**只起 bms_identity 一个**，且不加载 `.dev-keys.local`、不绑 loopback 别名
+      // → 本机四服务形态下不足以登录（其 preLaunchTask `清理后端端口（8000）` 还会把四服务一起清掉）。
+      // 本地开发请用下面的「本地四服务」项；本项保留用于「只调 identity 单服务」的场景。
       "name": "全套：后端单服务 + 宿主 + Chrome",
       "configurations": ["后端：单服务（debugpy · bms_identity）", "前端：宿主 + 模块 + Chrome（浏览器断点）"]
+    },
+    {
+      // 一键：四服务（脚本，后台进程）+ 宿主 + 模块产物 + Chrome。**前端断点可直接用**（Chrome 调试会话）；
+      // **后端断点**请改用「后端：单服务（debugpy · 本机四服务）」单项（先 `本地全套.sh stop <服务>` 腾位）。
+      "name": "全套（本地四服务 + 宿主 + Chrome）",
+      "configurations": ["后端：本地全套（四服务 · 脚本）", "前端：宿主 + 模块 + Chrome（浏览器断点）"]
     }
   ],
   "inputs": [
