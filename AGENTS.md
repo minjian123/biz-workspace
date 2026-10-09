@@ -76,8 +76,6 @@
 ## 提交与推送
 
 - **每个仓库独立提交**：bms 仓库、各产品仓库、工作区仓库分别提交；工作区仓库只提交配置文件（`AGENTS.md`、`README.md`、`.opencode/`、`.gitignore`、`.vscode/`、`*.code-workspace`）。
-- **不要擅自提交**（git commit），也不要擅自推送（git push）；完成工作后询问用户是否提交，得到明确指令后再执行。
-- 用户说"提交"才提交；用户说"推送"（或确认推远程）才推送；不确定时继续询问，不猜测意图。
 - 提交信息遵循《命名规范》：`type(scope): 中文描述`；只暂存本次任务相关文件，不夹带无关改动。
 - 两级指令独立确认：说"提交"只做 commit；说"推送"只做 push 至 main。单人开发期**直推 main，不走 MR**。
 - **推送默认不触发流水线**（2026-09-27 用户拍板）：推送一律加 `-o ci.skip`（`git push -o ci.skip origin main`）——单 runner `concurrent=4`，全量流水线常超 10 分钟，每次推送都跑会严重拖慢干活。**仅在需要时手动触发一次**（`POST /projects/2/pipeline?ref=main`，或 GitLab 界面 Run pipeline）。日常验证以推送前的本地预检为准（上一节），CI 作按需的全量 / 集成验证；触发后如需结果可盯，**不盯也无妨**。
