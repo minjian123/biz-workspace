@@ -1,6 +1,6 @@
 # 工作区 README
 
-> 工作区（组合层）：以 **bms 克隆**为基座，与一个或多个**产品仓库克隆**平级并置；AI 工作区（AGENTS、.opencode）位于工作区根
+> 工作区（组合层）：以 **bms 克隆**为基座，与一个或多个**产品仓库克隆**平级并置；AI 工作区（AGENTS、.opencode、.codebuddy）位于工作区根
 
 ## 1. 定位与组合
 
@@ -14,23 +14,30 @@
 
 ```text
 工作区/
-├── README.md            # 本文件
-├── AGENTS.md            # AI 协作约定（工作区级通用）
-├── scripts/             # 工作区工具链（tools/ 下按工具分目录）
-│   └── tools/workspace/ # 一键搭建（setup_workspace.py + 搭建工作区.sh/.bat）
-├── .opencode/           # AI 工作区配置（插件、模型、MCP 登记）
-├── .gitignore           # 工作区仓库忽略规则（bms/产品目录等）
-├── bms/                 # BMS 平台/基座（权威源克隆，独立 git 仓库）
-│   ├── bms文档/          # 平台文档（权威）
+├── README.md              # 本文件
+├── AGENTS.md              # AI 协作约定（工作区级通用）
+├── LICENSE                # MIT 许可
+├── *.code-workspace       # 工作区配置（多根并置：工作区配置 / 基座 / 产品 / 测试）
+├── scripts/               # 工作区工具链（tools/ 下按工具分目录）
+│   ├── README.md          # 工具链清单与职责边界
+│   └── tools/workspace/   # 一键搭建（setup_workspace.py + 搭建工作区.sh/.bat）
+├── .opencode/             # AI 工作区配置（插件、模型、MCP 登记）
+├── .vscode/               # 编辑器配置（settings / tasks / launch）
+├── .codebuddy/            # AI 跨会话工作记忆（memory/，本地维护、不入库）
+├── .gitignore             # 工作区仓库忽略规则（全忽略 + 配置白名单）
+├── bms/                   # BMS 平台/基座（权威源克隆，独立 git 仓库）
+│   ├── bms文档/            # 平台文档（权威）
 │   ├── mdm文档 -> ../mdm/mdm文档  # 主数据文档软链（含在 .gitignore，不入库）
 │   └── test文档 -> ../test/test文档   # 测试资产软链（含在 .gitignore，不入库）
-├── test/                # 测试资产（独立 git 仓库，可选克隆）
-│   ├── test文档/         # 测试文档
-│   ├── scripts/         # 测试侧脚本
+├── test/                  # 测试资产（独立 git 仓库，可选克隆）
+│   ├── test文档/           # 测试文档
+│   ├── scripts/           # 测试侧脚本
 │   └── bms文档 -> ../bms/bms文档      # 基座软链（不入库）
-├── <产品仓库>/           # 产品仓库克隆（如 biz、mdm、cw，各自独立 git 仓库）
-│   └── mdm文档 -> ../mdm/mdm文档      # 基座外的产品互引软链（仅 biz 等需引主数据者，不入库）
-└── tmp/                 # 项目临时目录（临时文件 / 截图 / 脚本草稿等，已 gitignore，不入库）
+├── <产品仓库>/             # 产品仓库克隆（如 biz、mdm、cw，各自独立 git 仓库）
+│   ├── bms文档 -> ../bms/bms文档      # 基座软链（自动建立，不入库）
+│   └── mdm文档 -> ../mdm/mdm文档      # 产品互引软链（仅 biz 等需引主数据者，不入库）
+├── database/              # 本地数据库落点（各仓 database/<仓库>/，已 gitignore，不入库）
+└── tmp/                   # 项目临时目录（临时文件 / 截图 / 脚本草稿等，已 gitignore，不入库）
 ```
 
 ## 3. 多仓 git 同步
@@ -45,6 +52,8 @@
 ## 4. AI 工作区
 
 - `AGENTS.md`：工作区级 AI 协作约定（唯一一份，含 bms 工具链、后台任务执行、镜像、讨论确认与提交流程；产品仓库不单设）。
+- `.opencode/`：AI 工作区配置（插件、模型、MCP server 登记）。
+- `.codebuddy/memory/`：AI 跨会话工作记忆（按日期的日报 + 长期记忆 `MEMORY.md`），随会话自行维护、不入库。
 - 开发工具链（bg 后台执行器、wol 电源控制、defect 缺陷工具、base-check 基座自检与 check-links 链接自洽校验等）在 `bms/scripts/tools/`。
 
 ## 5. 从零搭建工作区
@@ -68,11 +77,12 @@
      --product biz=<biz 远端> \
      --product mdm=<mdm 远端> \
      --link mdm=bms \      # bms 仓根建「mdm文档 → ../mdm/mdm文档」软链
+     --link mdm=biz \      # biz 仓根建「mdm文档 → ../mdm/mdm文档」软链（主数据互引）
      --test <test 远端>
    ```
 
    - 远端也可用环境变量传入（命令行优先）：`WS_BMS_REMOTE`、`WS_PRODUCTS`（如 `biz=<url>,mdm=<url>`）、`WS_TEST_REMOTE`。
-   - 主数据互引软链也可用环境变量：`WS_LINKS`（如 `mdm=bms` 表示在 bms 仓根建 `mdm文档 → ../mdm/mdm文档`）。
+   - 主数据互引软链也可用环境变量：`WS_LINKS`（如 `mdm=bms,mdm=biz` 表示在 bms / biz 仓根各建 `mdm文档 → ../mdm/mdm文档`）。
    - 默认工作区根为配置仓库根（可用 `--dir` 覆盖）；必填项缺失时，交互终端逐项提问；非交互环境（CI / 管道）直接报错。
    - 已存在的目录跳过克隆并纳入核对；软链已正确则跳过，冲突报错并提示人工处理（不静默覆盖）。
    - Windows 入口为 `scripts\tools\workspace\搭建工作区.bat`；软链需开发者模式或管理员权限，文档工作区仍以 Linux 为准。
@@ -107,6 +117,7 @@
 
 - **公开文档红线**：不写本地资源信息（服务器/开发机名称、内网 IP、端口、账号等），细节只放已 gitignore 的凭据文档。
 - **临时文件**：统一放工作区根 `tmp/`（临时文件 / 截图 / 脚本草稿等）——已写入工作区 `.gitignore`，不入库、不上传 git。
+- **本地库与 AI 记忆**：`database/`（本地数据库落点）与 `.codebuddy/`（AI 工作记忆）均为本地产物，已 gitignore、不入库。
 - 产品仓库根的 `bms文档` 基座软链接在 GitLab/GitHub 网页端与 Windows 克隆下不可用，文档工作区以 Linux 为准。
 - 平台机制、扩展接入与标识符登记以 `bms/bms文档/` 为权威；协作规则先读 `AGENTS.md`。
 
