@@ -32,6 +32,7 @@
   - 每日自动睡眠/唤醒：服务器侧 systemd timer（每晚 00:00 自动睡、08:00 由 RTC 自醒）。
   - 远程关机：`python3 bms/scripts/tools/wol/shutdown_mjbk.py`（**破坏性操作，执行前必须经用户确认**）；入口 `bms/scripts/tools/wol/关机mjbk.sh`。
   - 凭据从 `bms/deploy/.env` 读取（键位见 `bms/deploy/.env.example`），脚本不硬编码密码；SSH 连接走开发机公钥免密。
+- **浏览器真机验证走 Playwright MCP**（工具名 `mcp__playwright__*`，登记与用法见 bms《[CodeBuddy部署使用说明](bms/bms文档/资料/开发机/CodeBuddy部署使用说明.md)》「浏览器真机验证」节）：导航 / 点击 / 填表 / 截图 / 读控制台；**页面结构用 `browser_snapshot` / `browser_find`**（a11y 树内联返回、带 `[ref=eNN]`，`.playwright-mcp/*.yml` 不可依赖）；截图落工作区 `tmp/`（工具只回路径，不占模型图片额度）；控制台只认预期错误（favicon 404 / 模块宿主未起 `remoteEntry` 拒连 / 未登录 401）。**长会话首选 MCP**（`browser_find` 可省量）；`playwright-cli` / `agent-browser` 作极短会话兜底，勿为「省事」回退到 shell 里的 `playwright-cli`。
 - 机器凭据见 bms `bms文档/用户文档/本地资源.md`（已 gitignore，**勿恢复跟踪、勿提交、勿写入其他文档**）；凭据副本统一存各仓库 `deploy/.env`（已 gitignore，勿提交，勿将 .env 内容写入其他文档）。
 
 ## 依赖管理（前端 pnpm / 后端 uv，统一外置）
