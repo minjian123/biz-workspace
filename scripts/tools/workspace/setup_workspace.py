@@ -4,6 +4,7 @@
 按「配置仓 + bms + 产品仓 + test 测试仓」模型从零搭起工作区：
 克隆仓库（已存在则跳过）、建立跨仓软链（各产品仓的 `bms文档`、`bms/test文档`、
 `test/bms文档`，以及主数据等产品互引软链如 `bms/mdm文档`、`biz/mdm文档`）、
+补齐工作区根 `.ignore`（恢复 agent 检索可见性，见下方 ensure_ignore），
 最后核对各仓 git 状态与本地待办（`deploy/.env`、opencode / graphify 工具链）。
 
 用法（在配置仓库根运行）::
@@ -41,6 +42,32 @@ DOC_LINK = "bms文档"
 TO_BMS_DOC = os.path.join("..", "bms", "bms文档")
 TO_TEST_DOC = os.path.join("..", "test", "test文档")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+IGNORE_FILE = ".ignore"
+
+# 工作区根 .ignore 模板：.gitignore 首行 /* 是白名单式忽略，会把 bms/ mdm/ biz/ test/
+# 全部排除，导致 agent（以及任何遵循 gitignore 的检索工具）在工作区根只能看到十几个
+# 配置文件——即「检索盲区」。用 ! 反消除恢复可见性；依赖与产物仍由各仓自己的
+# .ignore / .gitignore 屏蔽，故检索零污染。内容须与 AGENTS.md「代码与文档检索」节一致，
+# 该文件随配置仓提交并在搭建时落盘（新增平级仓库时同步补一行）。
+IGNORE_TEMPLATE = """\
+# 检索屏蔽规则（仅 ripgrep 类检索工具读取，不影响 git 跟踪）
+#
+# 为何需要本文件：
+# .gitignore 首行 /* 是「只跟踪工作区配置文件」的白名单式忽略，会把
+# bms/ mdm/ biz/ test/ 整体排除——但它们是本工作区真正的内容主体。
+# 于是 agent 在工作区根检索时只能看到十几个配置文件（检索盲区）。
+#
+# 解法：.ignore 优先级高于 .gitignore，用 ! 反消除上述四个目录。
+# 依赖与产物仍由各仓自己的 .ignore / .gitignore 屏蔽（深目录规则优先），
+# 因此检索零污染——用不带 -g 的 `rg --files` 核对可见数量（约 5000）。
+#
+# 注意：勿删本文件或删掉下面四行；新增平级仓库（如 cw）时同步补一行。
+# 详见 AGENTS.md「代码与文档检索（强制口径）」节。
+!bms/
+!mdm/
+!biz/
+!test/
+"""
 
 # 产品互引软链：{仓名}=文档根名。为产品仓建「<目标>文档 → ../<目标>/<目标>文档」，
 # 或为 bms 仓建「<目标>文档 → ../<目标>/<目标>文档」（主数据等产品文档反引）。
@@ -195,6 +222,44 @@ def ensure_link(root, rel_link, target):
         out(f"        请人工确认后移除 {rel_link}，再重跑本脚本。")
 
 
+def ensure_ignore(root):
+    """落盘工作区根 .ignore（检索反消除规则），恢复 agent 在工作区根的检索可见性。
+
+    配置仓本身已提交本文件，克隆后天然存在；此处兜底两种情形：
+    ① 从旧版配置仓升级而来（新增本机制前克隆的工作区没有 .ignore）；
+    ② 手工删除了该文件。内容与模板一致则跳过，不一致则按模板重写。
+    """
+    global errors
+    target = os.path.join(root, IGNORE_FILE)
+    if os.path.lexists(target) and not os.path.isfile(target):
+        errors += 1
+        out(f"[冲突] {IGNORE_FILE} 已存在且不是普通文件，请人工确认后移除再重跑")
+        return
+    try:
+        with open(target, "r", encoding="utf-8") as handle:
+            current = handle.read()
+    except (OSError, UnicodeDecodeError):
+        current = None
+    if current is None:
+        try:
+            with open(target, "w", encoding="utf-8") as handle:
+                handle.write(IGNORE_TEMPLATE)
+            out(f"[创建] {IGNORE_FILE}（恢复工作区根检索可见性）")
+        except OSError as exc:
+            errors += 1
+            out(f"[失败] {IGNORE_FILE} 写入失败：{exc}")
+    elif current == IGNORE_TEMPLATE:
+        out(f"[跳过] {IGNORE_FILE} 已符合模板")
+    else:
+        try:
+            with open(target, "w", encoding="utf-8") as handle:
+                handle.write(IGNORE_TEMPLATE)
+            out(f"[重写] {IGNORE_FILE} 与模板不一致，已按模板覆盖")
+        except OSError as exc:
+            errors += 1
+            out(f"[失败] {IGNORE_FILE} 重写失败：{exc}")
+
+
 def tool_info(command):
     path = shutil.which(command)
     if not path:
@@ -301,7 +366,7 @@ def main():
     out(f"仓库组合：{combo}")
     out()
 
-    out("[1/3] 克隆仓库")
+    out("[1/4] 克隆仓库")
     clone(BMS_NAME, bms_remote, root)
     for name, url in products:
         clone(name, url, root)
@@ -309,7 +374,7 @@ def main():
         clone(TEST_NAME, test_remote, root)
     out()
 
-    out("[2/3] 建立软链")
+    out("[2/4] 建立软链")
     if not os.path.isdir(os.path.join(root, BMS_NAME)):
         warnings += 1
         out("[跳过] bms/ 不存在，无法建立软链")
@@ -344,7 +409,11 @@ def main():
             ensure_link(root, rel_link, rel_target)
     out()
 
-    out("[3/3] 核对")
+    out("[3/4] 补齐检索屏蔽规则")
+    ensure_ignore(root)
+    out()
+
+    out("[4/4] 核对")
     repos = [BMS_NAME] + names + ([TEST_NAME] if test_remote else [])
     for name in repos:
         path = os.path.join(root, name)
