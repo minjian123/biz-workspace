@@ -32,17 +32,17 @@
   - 每日自动睡眠/唤醒：服务器侧 systemd timer（每晚 00:00 自动睡、08:00 由 RTC 自醒）。
   - 远程关机：`python3 bms/scripts/tools/wol/shutdown_mjbk.py`（**破坏性操作，执行前必须经用户确认**）；入口 `bms/scripts/tools/wol/关机mjbk.sh`。
   - 凭据从 `bms/deploy/.env` 读取（键位见 `bms/deploy/.env.example`），脚本不硬编码密码；SSH 连接走开发机公钥免密。
-- **浏览器真机验证走 Playwright MCP**（工具名 `mcp__playwright__*`，登记与用法见 bms《[CodeBuddy部署使用说明](bms/bms文档/资料/开发机/CodeBuddy部署使用说明.md)》「浏览器真机验证」节）：导航 / 点击 / 填表 / 截图 / 读控制台；**页面结构用 `browser_snapshot` / `browser_find`**（a11y 树内联返回、带 `[ref=eNN]`，`.playwright-mcp/*.yml` 不可依赖）；截图落工作区 `tmp/`（工具只回路径，不占模型图片额度）；控制台只认预期错误（favicon 404 / 模块宿主未起 `remoteEntry` 拒连 / 未登录 401）。**长会话首选 MCP**（`browser_find` 可省量）；`playwright-cli` / `agent-browser` 作极短会话兜底，勿为「省事」回退到 shell 里的 `playwright-cli`。
+- **浏览器真机验证走 Playwright MCP**（工具名 `mcp__playwright__*`，登记与用法见 bms《[CodeBuddy部署使用说明](bms/bms文档/资料/开发机/linux/CodeBuddy部署使用说明.md)》「浏览器真机验证」节）：导航 / 点击 / 填表 / 截图 / 读控制台；**页面结构用 `browser_snapshot` / `browser_find`**（a11y 树内联返回、带 `[ref=eNN]`，`.playwright-mcp/*.yml` 不可依赖）；截图落工作区 `tmp/`（工具只回路径，不占模型图片额度）；控制台只认预期错误（favicon 404 / 模块宿主未起 `remoteEntry` 拒连 / 未登录 401）。**长会话首选 MCP**（`browser_find` 可省量）；`playwright-cli` / `agent-browser` 作极短会话兜底，勿为「省事」回退到 shell 里的 `playwright-cli`。
 - 机器凭据见 bms `bms文档/用户文档/本地资源.md`（已 gitignore，**勿恢复跟踪、勿提交、勿写入其他文档**）；凭据副本统一存各仓库 `deploy/.env`（已 gitignore，勿提交，勿将 .env 内容写入其他文档）。
 
 ## 依赖管理（前端 pnpm / 后端 uv，统一外置）
 
-- **依赖不进仓库树**：前端 node_modules（根 + 各 workspace 工程）整体外置到本地依赖仓，原位是符号链接；后端 .venv 经 `UV_PROJECT_ENVIRONMENT` 外置。检索工具默认不跟随符号链接 → 检索零污染。
+- **依赖不进仓库树**：前端 node_modules（根 + 各 workspace 工程）整体外置到本地依赖仓，原位是符号链接；后端 .venv 同样外置（`backend/.venv` 链接到依赖仓 `backend-venv`，不依赖 `UV_PROJECT_ENVIRONMENT`）。检索工具默认不跟随符号链接 → 检索零污染。
 - **本地依赖仓位置**：环境变量 `DEPS_DIR` > `bms/deploy/.env` 的 `DEPS_DIR=` > 默认 `$HOME/dev-deps/bms`（本地资源路径，勿写入公开文档/仓库文件）。
-- **维护脚本** `bms/scripts/tools/deps/`：`外置依赖.sh`（外置态，推荐常驻）、`还原依赖.sh`（pnpm install 前必须还原，安装器见符号链接会误判跳过）、`重装依赖.sh`（还原 → 安装 → 再外置；`--frontend-only` / `--backend-only`）。
+- **维护脚本** `bms/scripts/tools/deps/`：三个入口 `外置依赖` / `还原依赖` / `重装依赖`（**Python 单一实现** + Linux `.sh` / Windows `.bat` 瘦包装，跨平台同口径，2026-10-16 起）——`外置依赖`（外置态，推荐常驻）、`还原依赖`（pnpm install / uv sync 前必须还原，安装器见符号链接会误判跳过）、`重装依赖`（还原 → 安装 → 再外置；`--frontend-only` / `--backend-only`）。
 - **pnpm 单一 workspace**：`bms/pnpm-workspace.yaml` 收敛 `frontend/packages/*`、`frontend/apps/*`、`frontend/modules/*`；`pnpm-lock.yaml` 单一锁文件（必须提交）；平台基座包用 `workspace:*` 协议。pnpm 11 只读 workspace 里 `allowBuilds`（package.json 的 `pnpm` 字段不读）。
 - **严格依赖树（幽灵依赖零容忍）**：import 了哪个包就在该工程 `package.json` 声明哪个包；`pnpm install --frozen-lockfile` 是唯一安装入口（CI 同口径）。
-- **CI 一体**：前端 job 内 `pnpm install --frozen-lockfile` 现装（镜像不再预置依赖），缓存走 `npm_config_store_dir=/cache/pnpm/store` 等 variables。详见 bms 文档 `bms文档/资料/开发机/pnpm部署使用说明.md` 与 `uv部署使用说明.md`。
+- **CI 一体**：前端 job 内 `pnpm install --frozen-lockfile` 现装（镜像不再预置依赖），缓存走 `npm_config_store_dir=/cache/pnpm/store` 等 variables。详见 bms 文档 `bms文档/资料/开发机/linux/pnpm部署使用说明.md` 与 `uv部署使用说明.md`。
 
 ## 文档要求
 
