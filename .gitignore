@@ -11,5 +11,6 @@ tmp/
 !/AGENTS.md
 !/README.md
 !/LICENSE
+!/.gitattributes
 !/scripts/
 !/*.code-workspace
