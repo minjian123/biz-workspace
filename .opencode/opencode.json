@@ -57,21 +57,5 @@
         }
       }
     }
-  },
-  "mcp": {
-    "timeout": {
-      "catalog": 200000,
-      "execution": 200000
-    },
-    "servers": {
-      "mjw-vision": {
-        "type": "local",
-        "command": [
-          "python3",
-          "bms/scripts/tools/vision/mjw_vision_mcp.py"
-        ],
-        "disabled": false
-      }
-    }
   }
 }
