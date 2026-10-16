@@ -6,6 +6,11 @@ database/
 # 项目临时目录（临时文件 / 截图 / 脚本草稿等；即使调整上方白名单也始终不入库）
 tmp/
 !/.gitignore
+# 检索屏蔽规则（ripgrep 类工具读取，不影响 git 跟踪本身）
+# 必须入 git：.gitignore 首行 /* 会把 bms/ mdm/ biz/ test/ 全部排除，
+# 需靠 .ignore 的反消除规则恢复 agent 在【工作区根】的检索可见性。
+# 详见 AGENTS.md「代码与文档检索（强制口径）」节。
+!/.ignore
 !/.opencode/
 !/.vscode/
 !/AGENTS.md
@@ -13,4 +18,7 @@ tmp/
 !/LICENSE
 !/.gitattributes
 !/scripts/
+# Python 字节码缓存：!/scripts/ 白名单放行了整个目录，需单独排掉缓存
+scripts/**/__pycache__/
+*.py[cod]
 !/*.code-workspace
