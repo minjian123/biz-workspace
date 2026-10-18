@@ -70,7 +70,7 @@
       "presentation": { "reveal": "always", "panel": "dedicated" },
       "problemMatcher": {
         "owner": "bizs-vite-desktop",
-        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1, "kind": "file" }],
         "background": {
           "activeOnStart": true,
           "beginsPattern": "VITE v",
@@ -90,7 +90,7 @@
       "presentation": { "reveal": "always", "panel": "dedicated" },
       "problemMatcher": {
         "owner": "bizs-vite-desktop-with-modules",
-        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1, "kind": "file" }],
         "background": {
           "activeOnStart": true,
           "beginsPattern": "VITE v",
@@ -108,7 +108,7 @@
       "presentation": { "reveal": "always", "panel": "dedicated" },
       "problemMatcher": {
         "owner": "bizs-module-releases",
-        "pattern": [{ "regexp": "^\\[bizs-mreleases\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "pattern": [{ "regexp": "^\\[bizs-mreleases\\]\\s(.*)$", "file": 1, "message": 1, "kind": "file" }],
         "background": {
           "activeOnStart": true,
           "beginsPattern": "module-releases",
@@ -134,7 +134,7 @@
       "presentation": { "reveal": "always", "panel": "dedicated" },
       "problemMatcher": {
         "owner": "bizs-vite-module-demo",
-        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1, "kind": "file" }],
         "background": {
           "activeOnStart": true,
           "beginsPattern": "VITE v",
@@ -152,7 +152,7 @@
       "presentation": { "reveal": "always", "panel": "dedicated" },
       "problemMatcher": {
         "owner": "bizs-vite-module-sample",
-        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1 }],
+        "pattern": [{ "regexp": "^\\[bizs-vite\\]\\s(.*)$", "file": 1, "message": 1, "kind": "file" }],
         "background": {
           "activeOnStart": true,
           "beginsPattern": "VITE v",

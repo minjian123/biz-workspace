@@ -11,6 +11,11 @@
     //（隐藏即等于「从搜索框搜不到」）；同时工作区根 .gitignore 为「全忽略 + 白名单」，需关掉 ignore 文件过滤，
     // 否则在工作区根这一根下搜索会跳过整个 bms/（含全部代码与文档）。
     // 代价：Explorer 中 bms/biz/test 会同时以「独立根」与「工作区根下的子目录」两种形态出现。
+    //
+    // 注意：**Python 相关设置不要写在本文件**——本文件是 workspace 级，会被 biz / mdm / test 三个根一并继承，
+    // 而 `python.defaultInterpreterPath` 是相对各根解析的，在这些根下会指向不存在的路径并弹
+    //「无法解析默认解释器路径」。Python 设置改由各根自己的 `.vscode/settings.json` 声明（folder 级）：
+    // 工作区根写 `bms/backend/.venv/bin/python`、BMS 根写 `backend/.venv/bin/python`（双保险）。
     "search.useIgnoreFiles": false,
     "files.exclude": {
       "**/node_modules": true,

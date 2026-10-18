@@ -22,22 +22,43 @@
     "**/dist": true
   },
   // Python 后端：解释器与分析根（双保险——裸目录打开时 `bms/.vscode/settings.json` 不生效，
-  // 故此处按 `bms/` 前缀再声明一份；缺失会导致 basedpyright/Pylance 回落系统 Python，
-  // 满屏「无法解析导入 sqlalchemy」类报错）。
+  // 故此处按 `bms/` 前缀再声明一份）。
+  // 解释器一律写 `bin/python`（Linux 原生布局，跨平台一份配置）：Windows 上由依赖工具链
+  // `bms/scripts/tools/deps/外置依赖.py` 在 venv 内补 `bin/python` 兼容入口（→ Scripts/python.exe），
+  // 因此本路径在双平台都成立，**不要**改成 Scripts/python.exe（会让 Linux 开发机失效）。
   "python.defaultInterpreterPath": "bms/backend/.venv/bin/python",
-  "python.analysis.extraPaths": ["bms/backend"],
-  // Python 类型检查：与项目门禁同口径 —— `basedpyright` 默认 `recommended` 档会把项目
-  // **本就不检查**的 `alembic/versions/**`（项目 `[tool.pyright] include` 只含 libs/services）
-  // 报成一片风格问题；此处指向项目 pyproject.toml，并忽略 alembic 迁移脚本。
-  "basedpyright.analysis.configFilePath": "bms/backend/pyproject.toml",
-  // alembic 迁移不在项目 `[tool.pyright] include`（只含 libs/services）内，但 basedpyright 会分析
-  // 「打开的文件」，故用 ignore（抑制诊断）+ exclude 双保险；路径给足多种形式，避免基准差异未命中。
-  "basedpyright.analysis.ignore": [
-    "alembic",
-    "bms/backend/alembic",
-    "**/alembic/**"
+  "python.analysis.extraPaths": [
+    "bms/backend",
+    "bms/backend/libs/bms_core/src",
+    "bms/backend/services/txn/src",
+    "bms/backend/services/platform/src",
+    "bms/backend/services/identity/src",
+    "bms/backend/services/tenant/src",
+    "bms/backend/services/file/src",
+    "bms/backend/services/notification/src",
+    "bms/backend/services/search/src",
+    "bms/backend/services/ai/src",
+    "bms/backend/services/report/src"
   ],
-  "basedpyright.analysis.exclude": ["alembic", "bms/backend/alembic", "**/alembic/**"],
+  // Python 环境发现范围：钉到后端 venv，避免 `*/.venv` 默认规则命中 `tmp/.venv`
+  //（那是 tmp/ 临时脚本用的 paramiko 环境，被误选会让 Ruff / Pylance 用错解释器）。
+  "python-envs.workspaceSearchPaths": ["bms/backend/.venv"],
+  // Python 类型检查：与项目门禁同口径（bms/backend/pyproject.toml 的 [tool.pyright]）。
+  // 本项目实际装的是 Pylance（未装 basedpyright），故按 Pylance 认的 `python.analysis.*` 写；
+  // 严格档 + 排除 alembic 迁移（项目 `include` 只含 libs/services）与 tmp/、mdm/ 等非本仓 Python。
+  "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.venv",
+    "bms/backend/alembic",
+    "tmp",
+    "mdm",
+    "biz",
+    "test"
+  ],
+  "python.analysis.ignore": ["bms/backend/alembic", "**/alembic/**"],
   // ESLint（flat config）：monorepo 下**每个包各一份** `eslint.config.js`（`bms/frontend/{apps,packages,modules}/*`），
   // 必须让扩展「按被检查文件就近取配置」——否则它会把 `apps/desktop` 的配置套到 `modules/*` 的文件上，
   // 解析器随即报「No tsconfigRootDir was set, and multiple candidate TSConfigRootDirs are present」。
