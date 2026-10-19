@@ -21,7 +21,7 @@
 ├── scripts/               # 工作区工具链（tools/ 下按工具分目录）
 │   ├── README.md          # 工具链清单与职责边界
 │   └── tools/workspace/   # 一键搭建（setup_workspace.py + 搭建工作区.sh/.bat）
-├── .opencode/             # AI 工作区配置（插件、模型、MCP 登记）
+├── .opencode/             # AI 工作区配置（插件、模型）
 ├── .vscode/               # 编辑器配置（settings / tasks / launch）
 ├── .codebuddy/            # AI 跨会话工作记忆（memory/，本地维护、不入库）
 ├── .gitignore             # 工作区仓库忽略规则（全忽略 + 配置白名单）
@@ -52,7 +52,7 @@
 ## 4. AI 工作区
 
 - `AGENTS.md`：工作区级 AI 协作约定（唯一一份，含 bms 工具链、后台任务执行、镜像、讨论确认与提交流程；产品仓库不单设）。
-- `.opencode/`：AI 工作区配置（插件、模型、MCP server 登记）。
+- `.opencode/`：AI 工作区配置（插件、模型）。
 - `.codebuddy/memory/`：AI 跨会话工作记忆（按日期的日报 + 长期记忆 `MEMORY.md`），随会话自行维护、不入库。
 - 开发工具链（bg 后台执行器、wol 电源控制、defect 缺陷工具、base-check 基座自检与 check-links 链接自洽校验等）在 `bms/scripts/tools/`。
 

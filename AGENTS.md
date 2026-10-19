@@ -23,7 +23,7 @@
 - BMS（基础管理系统）定位平台：后端管理用途；当前尚未有源代码，规划已定案——技术栈、功能模块、开发计划与验收标准见 `bms/bms文档/规划/项目规划说明.md`，动手写代码前先读该文件。
 - 入口文档：`bms/README.md`（导航）、`bms/bms文档/文档首页.md`（全量导航）、`bms/bms文档/规划/平台可扩展性规划.md`（三层模型、业务不入平台、工作区模型）。
 - 平台机制、扩展接入流程、标识符（表前缀/业务码/错误码段/事件域）登记以 bms 文档为权威；基座边界见 `bms/bms文档/基座文档清单.md`。
-- `.opencode/` 下的插件按各自说明维护（勿手改生成物）；`opencode.json` 的 `plugin` 数组登记自定义插件，MCP server 走 `opencode.json` 的 `mcp` 段登记。`.reasonix/`、reasonix.toml 由 IDE 工具生成——勿手动修改。
+- `.opencode/` 下的插件按各自说明维护（勿手改生成物）；`opencode.json` 的 `plugins` 数组登记自定义插件。`.reasonix/`、reasonix.toml 由 IDE 工具生成——勿手动修改。
 
 ## 开发环境与远程操作（脚本在 `bms/scripts/tools/`）
 
