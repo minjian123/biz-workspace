@@ -4,7 +4,7 @@
 按「配置仓 + bms + 产品仓 + test 测试仓」模型从零搭起工作区：
 克隆仓库（已存在则跳过）、建立跨仓软链（各产品仓的 `bms文档`、`bms/test文档`、
 `test/bms文档`，以及主数据等产品互引软链如 `bms/mdm文档`、`biz/mdm文档`）、
-补齐工作区根 `.ignore`（恢复 agent 检索可见性，见下方 ensure_ignore），
+补齐工作区根 `.ignore`（检索可见性规则，与 `.gitignore` 分工见 ensure_ignore），
 最后核对各仓 git 状态与本地待办（`deploy/.env`、opencode / graphify 工具链）。
 
 用法（在配置仓库根运行）::
@@ -44,25 +44,17 @@ TO_TEST_DOC = os.path.join("..", "test", "test文档")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 IGNORE_FILE = ".ignore"
 
-# 工作区根 .ignore 模板：.gitignore 首行 /* 是白名单式忽略，会把 bms/ mdm/ biz/ test/
-# 全部排除，导致 agent（以及任何遵循 gitignore 的检索工具）在工作区根只能看到十几个
-# 配置文件——即「检索盲区」。用 ! 反消除恢复可见性；依赖与产物仍由各仓自己的
-# .ignore / .gitignore 屏蔽，故检索零污染。内容须与 AGENTS.md「代码与文档检索」节一致，
-# 该文件随配置仓提交并在搭建时落盘（新增平级仓库时同步补一行）。
+# 工作区根 .ignore 模板：.gitignore 白名单管「能提交什么」，rg 类工具却把它当可见性规则
+# 读，会把 bms/ 等四个仓目录读成「都不要」——本文件用 ! 反消除恢复检索可见性（分工与
+# 实测见 bms《内容检索工具部署使用说明》「检索范围与工作区忽略文件」节）。
+# 改本模板必须同步工作区根 .ignore：ensure_ignore 以「内容 == 模板」判定是否跳过，
+# 不一致会按模板覆盖；新增平级仓库（如 cw）时两处一起补一行。
 IGNORE_TEMPLATE = """\
-# 检索屏蔽规则（仅 ripgrep 类检索工具读取，不影响 git 跟踪）
+# 检索可见性规则（仅 rg 类检索工具读取；优先级高于 .gitignore，两者的分工见
+# bms《内容检索工具部署使用说明》「检索范围与工作区忽略文件」节）
 #
-# 为何需要本文件：
-# .gitignore 首行 /* 是「只跟踪工作区配置文件」的白名单式忽略，会把
-# bms/ mdm/ biz/ test/ 整体排除——但它们是本工作区真正的内容主体。
-# 于是 agent 在工作区根检索时只能看到十几个配置文件（检索盲区）。
-#
-# 解法：.ignore 优先级高于 .gitignore，用 ! 反消除上述四个目录。
-# 依赖与产物仍由各仓自己的 .ignore / .gitignore 屏蔽（深目录规则优先），
-# 因此检索零污染——用不带 -g 的 `rg --files` 核对可见数量（约 5000）。
-#
-# 注意：勿删本文件或删掉下面四行；新增平级仓库（如 cw）时同步补一行。
-# 详见 AGENTS.md「代码与文档检索（强制口径）」节。
+# 勿删下面四行；新增平级仓库时补一行，并同步 setup_workspace.py 的 IGNORE_TEMPLATE
+# （以「内容 == 模板」判跳过，不一致会被覆盖）。
 !bms/
 !mdm/
 !biz/
@@ -223,7 +215,11 @@ def ensure_link(root, rel_link, target):
 
 
 def ensure_ignore(root):
-    """落盘工作区根 .ignore（检索反消除规则），恢复 agent 在工作区根的检索可见性。
+    """落盘工作区根 .ignore（检索可见性规则），让 rg 类工具能看见四个仓目录。
+
+    与 .gitignore 分工：`.gitignore` 首行的 `/*` 白名单管「工作区仓能提交什么」，
+    而 rg 类工具默认把 .gitignore 当可见性规则读，会把白名单读成「这下面都不要」；
+    本文件用 `!bms/` 等反消除恢复可见性（优先级高于 .gitignore）。
 
     配置仓本身已提交本文件，克隆后天然存在；此处兜底两种情形：
     ① 从旧版配置仓升级而来（新增本机制前克隆的工作区没有 .ignore）；
@@ -409,7 +405,7 @@ def main():
             ensure_link(root, rel_link, rel_target)
     out()
 
-    out("[3/4] 补齐检索屏蔽规则")
+    out("[3/4] 补齐检索可见性规则")
     ensure_ignore(root)
     out()
 
