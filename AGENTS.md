@@ -49,11 +49,11 @@
 ## 代码与文档检索
 
 - **检索前必读本节**——检索范围由工作区根**两个忽略文件**决定（`.gitignore` 白名单管「能提交什么」、`.ignore` 管「能检索到什么」）；**勿删 `.ignore` 的四行反消除规则**，新增平级仓库须同步 `.ignore` 与 `setup_workspace.py` 的 `IGNORE_TEMPLATE`。分工、实测数据与核对命令见《[内容检索工具部署使用说明](bms/bms文档/资料/工具/内容检索工具部署使用说明.md#scope)》「检索范围与工作区忽略文件」节。
-- **优先用检索服务**：`bms/scripts/tools/search/` 提供代码+文档统一检索，按相关性排序返回 ≤10 条精简结果。**DSH / CodeBuddy 里优先用 MCP 工具调用**（见下条），不可用时退回命令行。三档按需选：
+- **优先用检索服务**：`bms/scripts/tools/search/` 提供代码+文档统一检索，按相关性排序返回 ≤10 条精简结果。**DSH / CodeBuddy / opencode 里优先用 MCP 工具调用**（见下条），不可用时退回命令行。三档按需选：
   1. **不知道去哪找 / 关键词命中面宽** → 用检索服务（MCP 工具 `search_content`，或命令行 `python3 scripts/tools/search/search_mcp.py -q 关键词`）；
   2. **已知精确符号或字面串** → `rg` 直接扫（全库毫秒级，够快）；
   3. **已知在哪个域** → 限定目录后 `rg`（见下条）。
-- **MCP 工具（DSH 与 CodeBuddy 均已接入，优先用它）**：服务名 `bizssearch`，工具带 `mcp__bizssearch__` 前缀，共三个——
+- **MCP 工具（DSH / CodeBuddy / opencode 均已接入，优先用它）**：服务名 `bizssearch`，共三个工具。**调用名随 agent 而变**——DSH / CodeBuddy 为 `mcp__bizssearch__<工具名>`；opencode（V2 默认 Code Mode）为 `tools.bizssearch.<工具名>`，工具名本身相同——
   - `mcp__bizssearch__search_content`：按相关性检索，返回路径 / 类型 / 标题 / 摘要 / 分数；参数 `query`、`kind`（doc/code/other）、`path`（路径子串）、`limit`（1-50）。
   - `mcp__bizssearch__search_with_snippet`：检索并附命中行片段，**省 token 首选**（不必再读整文件确认上下文）；参数 `query`、`kind`、`limit`。
   - `mcp__bizssearch__index_update`：增量刷新索引，无参数。
@@ -62,7 +62,7 @@
   - 怀疑结果过时（刚改过文件）→ 先调 `index_update`（1~2 秒）再检索。
   - 工具不可用（未重启 / 配置失效）时退回命令行，二者行为一致。
 - **索引维护**：索引**随工作区**落在 `<工作区根>/.cache/search/index.db`（约 62MB，已 gitignore），**手动刷新**——改完一批文档/代码后跑 `--update`（增量，约 1~2 秒）；怀疑索引滞后时跑 `--check`（比对索引与实际文件集，不一致退出码 1）。全量重建 `--rebuild` 约 40~70 秒。
-  - **跨工作区共享**：脚本按「当前会话工作目录」向上找 `bms/` 自动定位检索根，`bizs` 会话查 `bizs`、`cws` 会话查 `cws`，**各工作区共用同一条 MCP 配置**（DSH 在 `cordis.patch.yml`、CodeBuddy 在用户主目录 `.codebuddy/mcp.json` 各配一条即可，两侧工具名一致），索引互不干扰。
+  - **跨工作区共享**：脚本按「当前会话工作目录」向上找 `bms/` 自动定位检索根，`bizs` 会话查 `bizs`、`cws` 会话查 `cws`，**各工作区共用同一条 MCP 配置**（DSH 在 `cordis.patch.yml`、CodeBuddy 在用户主目录 `.codebuddy/mcp.json` 各配一条；opencode 为项目级 `.opencode/opencode.json`，脚本参数写相对路径即可直接复制复用，配置示例见 bms《内容检索工具部署使用说明》5.6），索引互不干扰。
   - **依赖装系统 Python**（`jieba` + `mcp`，两个纯 Python 包）：一次安装所有工作区与 agent 通用；**不要**装进 `backend/.venv`（uv 管理，会破坏依赖树）。
 - **工具级过滤（仍有效，与检索服务并用）**：靠检索工具自身的过滤能力收敛范围，三招按序用——① **限定目录**（按域进目录再检索，`path` 指到 `bms文档/设计/`、`backend/libs/bms_core/src/` 这类具体域）；② **限定扩展名**（`include` / `-g '*.md'`，排除配置与产物）；③ **精确关键词**（用领域术语而非泛词）。**目录限制的收敛效果远大于扩展名过滤**，所以「先想清楚去哪个域找」比「加多少过滤参数」更有效；实测数据见《[代码检索索引方式失效复盘](bms/bms文档/资料/知识档案/工程化与质量/代码检索索引方式失效复盘.md)》。
 - **禁用 `--no-ignore` / `-uu`**（会扫进依赖与构建产物，几十万文件）；确需更宽范围用 `-u`（保留 `.ignore` 与各仓 `.ignore` 的依赖屏蔽）。

@@ -57,5 +57,16 @@
         }
       }
     }
+  },
+  "mcp": {
+    "servers": {
+      "bizssearch": {
+        "type": "local",
+        "command": [
+          "C:/Users/minjian/AppData/Local/Programs/Python/Python314/python.exe",
+          "bms/scripts/tools/search/search_mcp.py"
+        ]
+      }
+    }
   }
 }
