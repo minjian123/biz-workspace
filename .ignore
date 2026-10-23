@@ -1,9 +1,10 @@
 # 检索可见性规则（仅 rg 类检索工具读取；优先级高于 .gitignore，两者的分工见
 # bms《内容检索工具部署使用说明》「检索范围与工作区忽略文件」节）
 #
-# 勿删下面四行；新增平级仓库时补一行，并同步 setup_workspace.py 的 IGNORE_TEMPLATE
+# 勿删下面五行；新增平级仓库时补一行，并同步 setup_workspace.py 的 IGNORE_TEMPLATE
 # （以「内容 == 模板」判跳过，不一致会被覆盖）。
 !bms/
 !mdm/
 !biz/
+!engkit/
 !test/

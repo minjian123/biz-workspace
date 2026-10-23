@@ -25,11 +25,15 @@
 ├── .vscode/               # 编辑器配置（settings / tasks / launch）
 ├── .codebuddy/            # AI 跨会话工作记忆（memory/，本地维护、不入库）
 ├── .gitignore             # 工作区仓库忽略规则（全忽略 + 配置白名单）
-├── .ignore                # 检索可见性规则（反消除 bms/ 等四目录，与 .gitignore 分管两件事）
+├── .ignore                # 检索可见性规则（反消除 bms/ 等五目录，与 .gitignore 分管两件事）
 ├── bms/                   # BMS 平台/基座（权威源克隆，独立 git 仓库）
 │   ├── bms文档/            # 平台文档（权威）
 │   ├── mdm文档 -> ../mdm/mdm文档  # 主数据文档软链（含在 .gitignore，不入库）
 │   └── test文档 -> ../test/test文档   # 测试资产软链（含在 .gitignore，不入库）
+├── engkit/                # 跨仓工程化工具包（独立 git 仓库，必选）
+│   ├── src/engkit/        # 包源码（links / docs-scope / preflight / run-once / kiwi …）
+│   ├── engkit文档/         # 工具包文档根（概述 / 接入说明 / 开发约定）
+│   └── bms文档 -> ../bms/bms文档  # 基座软链（自动建立，不入库）
 ├── test/                  # 测试资产（独立 git 仓库，可选克隆）
 │   ├── test文档/           # 测试文档
 │   ├── scripts/           # 测试侧脚本
@@ -59,7 +63,7 @@
 
 ## 5. 从零搭建工作区
 
-> 以当前 bizs（`bms` + `biz` + `mdm` + `test`）为例；其他组合（如 cws = `bms` + `cw`）把产品仓参数换成对应仓库即可。
+> 以当前 bizs（`bms` + `engkit` + `biz` + `mdm` + `test`）为例；其他组合（如 cws = `bms` + `engkit` + `cw`）把产品仓参数换成对应仓库即可。`engkit`（跨仓工程化工具包）为**必选仓**。
 
 前置条件：Linux（软链以 Linux 为准）、`git`、Python 3。opencode 等 AI 工具链按需另装，脚本只检测并提示。
 
@@ -70,19 +74,20 @@
    cd bizs
    ```
 
-2. 一键搭建（克隆 bms 与产品 / 测试仓、建跨仓软链、核对）：
+2. 一键搭建（克隆 bms / engkit 与产品 / 测试仓、建跨仓软链、核对）：
 
-   ```bash
-   scripts/tools/workspace/搭建工作区.sh \
-     --bms <bms 远端> \
-     --product biz=<biz 远端> \
-     --product mdm=<mdm 远端> \
-     --link mdm=bms \      # bms 仓根建「mdm文档 → ../mdm/mdm文档」软链
-     --link mdm=biz \      # biz 仓根建「mdm文档 → ../mdm/mdm文档」软链（主数据互引）
-     --test <test 远端>
-   ```
+  ```bash
+  scripts/tools/workspace/搭建工作区.sh \
+    --bms <bms 远端> \
+    --engkit <engkit 远端> \   # 跨仓工程化工具包（必选）
+    --product biz=<biz 远端> \
+    --product mdm=<mdm 远端> \
+    --link mdm=bms \      # bms 仓根建「mdm文档 → ../mdm/mdm文档」软链
+    --link mdm=biz \      # biz 仓根建「mdm文档 → ../mdm/mdm文档」软链（主数据互引）
+    --test <test 远端>
+  ```
 
-   - 远端也可用环境变量传入（命令行优先）：`WS_BMS_REMOTE`、`WS_PRODUCTS`（如 `biz=<url>,mdm=<url>`）、`WS_TEST_REMOTE`。
+  - 远端也可用环境变量传入（命令行优先）：`WS_BMS_REMOTE`、`WS_ENGKIT_REMOTE`、`WS_PRODUCTS`（如 `biz=<url>,mdm=<url>`）、`WS_TEST_REMOTE`。
    - 主数据互引软链也可用环境变量：`WS_LINKS`（如 `mdm=bms,mdm=biz` 表示在 bms / biz 仓根各建 `mdm文档 → ../mdm/mdm文档`）。
    - 默认工作区根为配置仓库根（可用 `--dir` 覆盖）；必填项缺失时，交互终端逐项提问；非交互环境（CI / 管道）直接报错。
    - 已存在的目录跳过克隆并纳入核对；软链已正确则跳过，冲突报错并提示人工处理（不静默覆盖）。
@@ -92,9 +97,11 @@
 
    ```bash
    git clone <bms 远端> bms
+   git clone <engkit 远端> engkit
    git clone <biz 远端> biz
    git clone <mdm 远端> mdm
    git clone <test 远端> test
+   ln -sfn ../bms/bms文档 engkit/bms文档
    ln -sfn ../bms/bms文档 biz/bms文档
    ln -sfn ../bms/bms文档 mdm/bms文档
    ln -sfn ../mdm/mdm文档 biz/mdm文档   # biz 引用 mdm 主数据
@@ -102,6 +109,8 @@
    ln -sfn ../test/test文档 bms/test文档
    ln -sfn ../bms/bms文档 test/bms文档
    ```
+
+   > `engkit` 与 bms / 各产品仓必须**平级并置**：bms 侧包装入口按「`import engkit` → `ENGKIT_HOME` → 同级 `../engkit`」定位，缺失即报安装指引。
 
 4. 后续（可选）：
    - 凭据：各仓库 `deploy/.env` 复制自 `deploy/.env.example` 并填值（已 gitignore，凭据见 bms《本地资源》，不入库）。

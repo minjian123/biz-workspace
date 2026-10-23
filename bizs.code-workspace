@@ -4,6 +4,7 @@
     { "path": "bms", "name": "BMS 基座/平台" },
     { "path": "biz", "name": "biz 产品" },
     { "path": "mdm", "name": "mdm 主数据" },
+    { "path": "engkit", "name": "工程化工具包" },
     { "path": "test", "name": "测试资产" }
   ],
   "settings": {

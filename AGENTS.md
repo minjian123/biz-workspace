@@ -7,9 +7,9 @@
 
 ## 工作区模型（bizs / cws）
 
-- 本目录是**工作区**（组合层）：以 **bms 克隆**为基座，与一个或多个产品仓库克隆平级并置。
-  - `bizs/`：`bms/`（BMS 平台/基座）+ `biz/`（biz 企业运营管理产品）+ `mdm/`（mdm 主数据管理产品）
-  - `cws/`：`bms/`（BMS 平台/基座）+ `cw/`（CW 创作系统产品）
+- 本目录是**工作区**（组合层）：以 **bms 克隆**为基座，与 **engkit 克隆**（跨仓工程化工具包，必选）及一个或多个产品仓库克隆平级并置。
+  - `bizs/`：`bms/`（BMS 平台/基座）+ `engkit/`（跨仓工程化工具包）+ `biz/`（biz 企业运营管理产品）+ `mdm/`（mdm 主数据管理产品）
+  - `cws/`：`bms/`（BMS 平台/基座）+ `engkit/`（跨仓工程化工具包）+ `cw/`（CW 创作系统产品）
 - **同步靠各自 git 远端**：改动任一处 bms 克隆 → 提交推送 → 其他工作区的 `bms/` 克隆 `git pull` 自然更新，合并与冲突走 git 机制；产品仓库同理。**没有文档同步脚本**（原 base-sync 机制已退役）。
 - **产品仓库只放产品专属内容**：产品文档根按项目命名（如 `biz文档/`、`mdm文档/`、`cw文档/`），不再在文档根下用软链占位基座目录（`规范`/`资料`/`资源`）；各产品仓库根设软链 `bms文档 → ../bms/bms文档` 与产品文档根并排，产品文档引用基座统一用 `../bms文档/…`。**主数据产品 mdm 与其他产品互引**：`bms/mdm文档 → ../mdm/mdm文档`、`biz/mdm文档 → ../mdm/mdm文档`（产品仓库根软链，同 `bms文档` 口径，正文分治见下）；通过 `bms文档` 软链编辑基座文件时，实际修改的是 bms 克隆，须回 bms 仓库提交，通过 `mdm文档` 软链编辑主数据文档时须回 mdm 仓库提交。
 - **引用写法分治**：bms 正文提及主数据写**纯文本路径**（`mdm/mdm文档/…`，不写相对链接——CI 只 clone bms 会判断链，可类比 test 文档约定）；biz / mdm 正文可用相对链接（`../mdm文档/…`、`../bms文档/…`）跨仓跳转。
@@ -24,6 +24,17 @@
 - 入口文档：`bms/README.md`（导航）、`bms/bms文档/文档首页.md`（全量导航）、`bms/bms文档/规划/平台可扩展性规划.md`（三层模型、业务不入平台、工作区模型）。
 - 平台机制、扩展接入流程、标识符（表前缀/业务码/错误码段/事件域）登记以 bms 文档为权威；基座边界见 `bms/bms文档/基座文档清单.md`。
 - `.opencode/` 下的插件按各自说明维护（勿手改生成物）；`opencode.json` 的 `plugins` 数组登记自定义插件。`.reasonix/`、reasonix.toml 由 IDE 工具生成——勿手动修改。
+
+## 跨仓工程化工具包（engkit）
+
+护栏与开发脚本的**唯一实现**在独立仓 `engkit`（文档根 `engkit文档/`，包源码 `src/engkit/`）：文档**链接与锚点**校验、文档**口径护栏**（进度类字段只落阶段计划）、**预检**与**重命令包装**（缓存回放 / 未包装拦截）、**选测**与**覆盖率门禁**、**Kiwi 用例登记**。
+
+- **各仓只放配置**：仓根一份 `engkit.toml`（文档根 / 工程清单 / 选测规则 / 预检步骤 / 覆盖率门禁 / 拦截口径）。包内**不得出现任何仓名或目录字面**（engkit 侧机器断言）；新增仓库只加配置、不改代码。
+- **bms 侧为薄包装**：`bms/scripts/tools/{preflight,base-check}/` 下入口只转发参数与退出码（定位顺序 `import engkit` → `ENGKIT_HOME` → 同级 `../engkit`），**不得写第二套推导或判定逻辑**；`engkit/` 与 `bms/` 必须**平级并置**。
+- **mdm 侧为 git 源依赖**：`backend/pyproject.toml` 锁 rev（与 `bms-core` 同构），`uv run engkit links|docs-scope|preflight` 直接可用；预检含静态 + 契约门禁 + 定向用例 + 覆盖率门禁（一条命令）。
+- **入口与口径**：五个常用子命令 `links` / `docs-scope` / `preflight` / `run-once` / `kiwi`，另有 `selection` / `run-selected` / `coverage` / `guard`。预检步骤、预算、阈值一律改配置（`engkit.toml`），不改工具包代码；`pytest-xdist` 随 engkit 安装（各仓无需自装），缺装时并行档位显式降级串行。
+- **门禁**：engkit 自身 `pytest` + `ruff` + `pyright` + 覆盖率（口径见《AI开发规范》「覆盖率要求」节），CI 双轨（基础门禁直跑 + 自举烟雾 `engkit preflight --fast`）。
+- **文档与接入**：`engkit/engkit文档/`（文档首页 → 概述「配置字段全表」→ 接入说明「新仓四步 + 已接入实例」→ 开发约定「包内红线」）；bms 主数据与测试相关口径仍以 bms 文档为准。
 
 ## 开发环境与远程操作（脚本在 `bms/scripts/tools/`）
 
@@ -48,7 +59,7 @@
 
 ## 代码与文档检索
 
-- **检索前必读本节**——检索范围由工作区根**两个忽略文件**决定（`.gitignore` 白名单管「能提交什么」、`.ignore` 管「能检索到什么」）；**勿删 `.ignore` 的四行反消除规则**，新增平级仓库须同步 `.ignore` 与 `setup_workspace.py` 的 `IGNORE_TEMPLATE`。分工、实测数据与核对命令见《[内容检索工具部署使用说明](bms/bms文档/资料/工具/内容检索工具部署使用说明.md#scope)》「检索范围与工作区忽略文件」节。
+- **检索前必读本节**——检索范围由工作区根**两个忽略文件**决定（`.gitignore` 白名单管「能提交什么」、`.ignore` 管「能检索到什么」）；**勿删 `.ignore` 的五行反消除规则**（`bms/`、`mdm/`、`biz/`、`engkit/`、`test/`），新增平级仓库须同步 `.ignore`、`setup_workspace.py` 的 `IGNORE_TEMPLATE` 与 `*.code-workspace` 的 `folders`。分工、实测数据与核对命令见《[内容检索工具部署使用说明](bms/bms文档/资料/工具/内容检索工具部署使用说明.md#scope)》「检索范围与工作区忽略文件」节。
 - **优先用检索服务**：`bms/scripts/tools/search/` 提供代码+文档统一检索，按相关性排序返回 ≤10 条精简结果。**DSH / CodeBuddy / opencode 里优先用 MCP 工具调用**（见下条），不可用时退回命令行。三档按需选：
   1. **不知道去哪找 / 关键词命中面宽** → 用检索服务（MCP 工具 `search_content`，或命令行 `python3 scripts/tools/search/search_mcp.py -q 关键词`）；
   2. **已知精确符号或字面串** → `rg` 直接扫（全库毫秒级，够快）；

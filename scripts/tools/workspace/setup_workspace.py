@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """工作区一键搭建脚本（Linux / Windows 通用，软链以 Linux 为准）。
 
-按「配置仓 + bms + 产品仓 + test 测试仓」模型从零搭起工作区：
-克隆仓库（已存在则跳过）、建立跨仓软链（各产品仓的 `bms文档`、`bms/test文档`、
+按「配置仓 + bms + engkit + 产品仓 + test 测试仓」模型从零搭起工作区：
+克隆仓库（已存在则跳过）、建立跨仓软链（各产品仓与 engkit 的 `bms文档`、`bms/test文档`、
 `test/bms文档`，以及主数据等产品互引软链如 `bms/mdm文档`、`biz/mdm文档`）、
 补齐工作区根 `.ignore`（检索可见性规则，与 `.gitignore` 分工见 ensure_ignore），
 最后核对各仓 git 状态与本地待办（`deploy/.env`、opencode / graphify 工具链）。
@@ -11,6 +11,7 @@
 
     scripts/tools/workspace/搭建工作区.sh \
         --bms <bms 远端> \
+        --engkit <engkit 远端> \
         --product biz=<biz 远端> \
         --product mdm=<mdm 远端> \
         --link mdm=bms \
@@ -18,6 +19,7 @@
 
     # 远端与互引软链也可用环境变量（命令行优先）
     WS_BMS_REMOTE=<bms 远端> \
+    WS_ENGKIT_REMOTE=<engkit 远端> \
     WS_PRODUCTS="biz=<biz 远端>,mdm=<mdm 远端>" \
     WS_LINKS="mdm=bms" \
     WS_TEST_REMOTE=<test 远端> \
@@ -25,7 +27,8 @@
 
 说明：脚本只做克隆与软链，不写凭据、不安装软件、不改编辑器配置；
 默认工作区根为脚本所在配置仓库的根目录（可用 `--dir` 覆盖）；
-必填项（bms 远端）缺失时在交互终端逐项提问，非交互环境直接报错。
+必填项（bms 远端、engkit 远端）缺失时在交互终端逐项提问，非交互环境直接报错。
+`engkit` 为**必选仓**（跨仓工程化工具包：文档链接与口径护栏 / 预检与重命令包装 / 用例登记）。
 
 退出码：0 搭建完成；1 有需人工处理项；2 参数或环境错误。
 """
@@ -37,6 +40,7 @@ import subprocess
 import sys
 
 BMS_NAME = "bms"
+ENGKIT_NAME = "engkit"
 TEST_NAME = "test"
 DOC_LINK = "bms文档"
 TO_BMS_DOC = os.path.join("..", "bms", "bms文档")
@@ -53,11 +57,12 @@ IGNORE_TEMPLATE = """\
 # 检索可见性规则（仅 rg 类检索工具读取；优先级高于 .gitignore，两者的分工见
 # bms《内容检索工具部署使用说明》「检索范围与工作区忽略文件」节）
 #
-# 勿删下面四行；新增平级仓库时补一行，并同步 setup_workspace.py 的 IGNORE_TEMPLATE
+# 勿删下面五行；新增平级仓库时补一行，并同步 setup_workspace.py 的 IGNORE_TEMPLATE
 # （以「内容 == 模板」判跳过，不一致会被覆盖）。
 !bms/
 !mdm/
 !biz/
+!engkit/
 !test/
 """
 
@@ -303,6 +308,11 @@ def main():
     )
     parser.add_argument("--bms", metavar="远端", help="bms 平台仓库远端（必填；或用 WS_BMS_REMOTE）")
     parser.add_argument(
+        "--engkit",
+        metavar="远端",
+        help="工程化工具包仓库远端（必填；或用 WS_ENGKIT_REMOTE）",
+    )
+    parser.add_argument(
         "--product",
         metavar="名称=远端",
         action="append",
@@ -325,6 +335,7 @@ def main():
         fail(f"工作区根目录不存在：{root}")
 
     bms_remote = (args.bms or os.environ.get("WS_BMS_REMOTE", "")).strip()
+    engkit_remote = (args.engkit or os.environ.get("WS_ENGKIT_REMOTE", "")).strip()
     test_remote = (args.test or os.environ.get("WS_TEST_REMOTE", "")).strip()
     products = [parse_product(value) for value in args.product]
     if not products and os.environ.get("WS_PRODUCTS", "").strip():
@@ -345,6 +356,10 @@ def main():
         if not interactive:
             fail("缺少 bms 远端：请用 --bms 或环境变量 WS_BMS_REMOTE 传入。")
         bms_remote = ask_required("bms 平台仓库远端（必填）：")
+    if not engkit_remote:
+        if not interactive:
+            fail("缺少 engkit 远端：请用 --engkit 或环境变量 WS_ENGKIT_REMOTE 传入。")
+        engkit_remote = ask_required("工程化工具包仓库远端（必填）：")
     if interactive and not products:
         value = ask("产品仓库（名称=远端，多个用逗号分隔，留空跳过）：")
         if value:
@@ -356,7 +371,7 @@ def main():
     if len(set(names)) != len(names):
         fail(f"产品仓名称重复：{names}")
 
-    combo = " + ".join([BMS_NAME] + names + ([TEST_NAME] if test_remote else []))
+    combo = " + ".join([BMS_NAME, ENGKIT_NAME] + names + ([TEST_NAME] if test_remote else []))
     out("== 工作区一键搭建 ==")
     out(f"工作区根：{root}")
     out(f"仓库组合：{combo}")
@@ -364,6 +379,7 @@ def main():
 
     out("[1/4] 克隆仓库")
     clone(BMS_NAME, bms_remote, root)
+    clone(ENGKIT_NAME, engkit_remote, root)
     for name, url in products:
         clone(name, url, root)
     if test_remote:
@@ -381,6 +397,12 @@ def main():
             else:
                 warnings += 1
                 out(f"[跳过] {name}/ 不存在，跳过其基座软链")
+        # 工程化工具包同样以 `bms文档` 软链引用基座（engkit 文档根为 `engkit文档/`，两者并排）
+        if os.path.isdir(os.path.join(root, ENGKIT_NAME)):
+            ensure_link(root, os.path.join(ENGKIT_NAME, DOC_LINK), TO_BMS_DOC)
+        else:
+            warnings += 1
+            out(f"[跳过] {ENGKIT_NAME}/ 不存在，跳过其基座软链")
         if test_remote:
             if os.path.isdir(os.path.join(root, TEST_NAME)):
                 ensure_link(root, os.path.join(BMS_NAME, "test文档"), TO_TEST_DOC)
@@ -410,7 +432,7 @@ def main():
     out()
 
     out("[4/4] 核对")
-    repos = [BMS_NAME] + names + ([TEST_NAME] if test_remote else [])
+    repos = [BMS_NAME, ENGKIT_NAME] + names + ([TEST_NAME] if test_remote else [])
     for name in repos:
         path = os.path.join(root, name)
         if not os.path.isdir(path):
