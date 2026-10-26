@@ -127,7 +127,7 @@
 
 - **公开文档红线**：不写本地资源信息（服务器/开发机名称、内网 IP、端口、账号等），细节只放已 gitignore 的凭据文档。
 - **忽略文件分工**：`.gitignore`（白名单）与 `.ignore`（检索可见性）分管「能提交什么」与「能检索到什么」，新增平级仓库时两者都要补——详见 bms《[内容检索工具部署使用说明](bms/bms文档/资料/工具/内容检索工具部署使用说明.md#scope)》「检索范围与工作区忽略文件」节。
-- **临时文件**：统一放工作区根 `tmp/`（临时文件 / 截图 / 脚本草稿等）——已写入工作区 `.gitignore`，不入库、不上传 git。
+- **临时文件**：统一放工作区根 `tmp/`（临时文件 / 截图 / 脚本草稿等）——已写入工作区 `.gitignore`，不入库、不上传 git。**禁止落在各仓根 / 源码目录**（即使已 gitignore 也算污染工作区）；自查与清理用 `python scripts/tools/workspace/check_workspace_hygiene.py`（`--clean` 隔离），该检查已接入 bms 预检第一步，违规即预检失败——口径见 [`AGENTS.md`](AGENTS.md)「工作区卫生」节。
 - **本地库与 AI 记忆**：`database/`（本地数据库落点）与 `.codebuddy/`（AI 工作记忆）均为本地产物，已 gitignore、不入库。
 - 产品仓库根的 `bms文档` 基座软链接在 GitLab/GitHub 网页端与 Windows 克隆下不可用，文档工作区以 Linux 为准。
 - 平台机制、扩展接入与标识符登记以 `bms/bms文档/` 为权威；协作规则先读 `AGENTS.md`。

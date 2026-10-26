@@ -122,12 +122,21 @@
 - 与「预算护栏」的关系：预检自带的单步 / 总体超时是**防误跑长命令**；`run-once.py` 是**防重复跑同一命令**，两者叠加，
   不得以「反正有护栏」为由重复执行。
 
+## 工作区卫生（临时 / 日志文件落点红线）
+
+- **唯一合法落点**：临时文件、日志、截图、脚本草稿、探针产物一律落**工作区根 `tmp/`**；工程缓存落**各仓 `.cache/`**。除此之外任何位置出现日志 / 临时类文件都算**污染工作区**（2026-10-26 用户拍板）。
+- **禁止落在仓库根 / 源码目录**：`bms/`、`mdm/`、`engkit/`、`biz/`、`test/` 的仓根与源码目录内**不得**出现 `*.log` / `*.err` / `*.out` / `tmp-*` / `.coverage*` 等产物——即使已 gitignore 也不许（污染的是磁盘落点与检索噪音，不是提交历史）。
+- **护栏即时报错**：`bms/engkit.toml` 预检第一步已接入「工作区卫生」检查（`bms/scripts/tools/preflight/check_workspace_hygiene.py` 薄包装 → 工作区仓 `scripts/tools/workspace/check_workspace_hygiene.py` 实现），白名单落点之外出现日志 / 临时文件**预检即失败**。CI 只 clone bms 单仓、无工作区上下文时自动跳过。
+- **判定口径**：落点白名单为主（不依赖扩展名黑名单），已 git 跟踪的项目文件天然豁免；依赖与构建目录（`node_modules` / `.venv` / `__pycache__` / `dist` …）整体剪枝。
+- **随手自查 / 清理**：工作区根执行 `python scripts/tools/workspace/check_workspace_hygiene.py`（违规退出码 1）；加 `--clean` 把违规文件隔离到 `tmp/_quarantine/<时间戳>/`；入口脚本 `检查工作区卫生.sh` / `.bat`。
+- **工具产物落点**：Playwright MCP 已配 `--output-dir tmp/playwright/mcp`（会话截图 / 快照直落 `tmp/`）；新增工具若默认往仓根写产物，**改配置指到 `tmp/`**，不要事后搬运。
+
 ## 提交与推送
 
 - **每个仓库独立提交**：bms 仓库、各产品仓库、工作区仓库分别提交；工作区仓库只提交配置文件（`AGENTS.md`、`README.md`、`.opencode/`、`.gitignore`、`.vscode/`、`*.code-workspace`）。
 - 提交信息遵循《命名规范》：`type(scope): 中文描述`；只暂存本次任务相关文件，不夹带无关改动。
 - 两级指令独立确认：说"提交"只做 commit；说"推送"只做 push 至 main。单人开发期**直推 main，不走 MR**。
-- **推送默认不触发流水线**（2026-09-27 用户拍板）：推送一律加 `-o ci.skip`（`git push -o ci.skip origin main`）——单 runner `concurrent=4`，全量流水线常超 10 分钟，每次推送都跑会严重拖慢干活。**仅在需要时手动触发一次**（`POST /projects/2/pipeline?ref=main`，或 GitLab 界面 Run pipeline）。日常验证以推送前的本地预检为准（上一节），CI 作按需的全量 / 集成验证；触发后如需结果可盯，**不盯也无妨**。
+- **推送不触发流水线（CI 侧已关闭，2026-10-26 用户拍板）**：三仓（bms / mdm / engkit）`.gitlab-ci.yml` 的 `workflow.rules` 已**删除 `push` 与 `merge_request_event` 分支**——推送一律**不建流水线**，因此推送**无需**再加 `-o ci.skip`（该写法已从本文退役）。CI 只作**按需手工触发**：`python3 bms/scripts/tools/ci/trigger.py`（缺省 bms main，可 `--project mdm|engkit`、`--ref <分支/tag>`、`--watch` 盯终态），或 GitLab 界面 Run pipeline / `POST /projects/<id>/pipeline`。**手工触发即全量**（无 Git 推送事件的流水线里 `rules:changes` 恒为真，各 job 天然全跑）；推 `vX.Y.Z` tag 仍自动建流水线（发布语义，非日常推送）。日常验证以推送前的本地预检为准（见下条），触发后如需结果可盯，**不盯也无妨**。
 - **覆盖率硬门禁 = 100%（行 + 分支），本地不打折**（2026-10-12 用户拍板，收紧原 2026-09-27「只跑 `--fast`」口径）：后端 `pytest --cov-branch --cov-fail-under=100`、前端 Vitest `coverage.thresholds` 全 100；**不达标不得推送**——避免「本地放过、CI 才暴露、改半天还不知道行不行」。日常自检可跑 `python3 bms/scripts/tools/preflight/check-preflight.py --fast`（在 bms 仓根；秒级：CI 配置 / 静态 / 基座与边界）；推送前跑**缺省定向档** `python3 bms/scripts/tools/preflight/check-preflight.py`（静态 + 基座/边界 + 按 git 变更自动定向的受影响工程用例 + **变更源文件**覆盖率门禁，约 1~2 分钟，带单步 120s / 总体 180s 预算护栏，超时即中止）；**本地缺省不跑全量**——全量档须显式 `--full`（2026-10-18 用户拍板：预检脚本反转默认档并加预算护栏，全量与集成交 CI 按需触发）。CI 为按需复核，不承担「首次暴露」职责。**覆盖率门禁只有「硬门禁」与「尚未跑」两态，不设 `allow_failure` 软门禁**；存量缺口补齐前**不推送**（不触发流水线）。
 - **本地测试以「受变更影响定向用例 + 覆盖率门禁」为底线**（2026-10-12 用户拍板，修订 2026-09-27 口径）：定向用例仍按模块 / 路径选择（不跑与改动无关的用例），但**覆盖率必须本地跑到 100%**；全量与集成（E2E / 三库 / 压测）仍交 CI 按需触发，确需全量时先向用户说明并确认。
 - **CI job 定义改动不在同一条流水线自验**：`.gitlab-ci.yml` 改动只负责创建流水线，job 级触发已不再监听 `.gitlab-ci.yml`（改按各域路径放行，纯 CI / 部署 / 后端改动不再重建前端）。因此改了某个 job 的定义后，它不会在这条推送里被跑到，要等下次命中对应路径；配置改动风险低、可回退，必要时手动跑一次 web 流水线即可验证。
