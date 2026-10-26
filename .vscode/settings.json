@@ -93,5 +93,7 @@
   // 双保险：各包 `eslint.config.js` 亦已把 `parserOptions.tsconfigRootDir` 锚到自身目录。
   "eslint.useFlatConfig": true,
   "eslint.workingDirectories": [{ "mode": "auto" }],
-  "eslint.validate": ["javascript", "typescript", "vue"]
+  "eslint.validate": ["javascript", "typescript", "vue"],
+  // 行尾统一 LF（口径同各仓 .gitattributes / .editorconfig）
+  "files.eol": "\n"
 }
