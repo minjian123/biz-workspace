@@ -84,6 +84,34 @@ HEADER_FINISH, HEADER_WINDOW, HEADER_HOURS = "完成日期", "排期窗口", "�
 
 SCHEMA_B, SCHEMA_A, SCHEMA_C = "B（状态）", "A（完成日期）", "C（无状态列）"
 
+REQUIRED_DONE_COLUMNS = (
+    "编号",
+    "任务",
+    "工时（重估）",
+    "完成日期",
+    "任务文件",
+    "偏差与遗留",
+)
+"""《计划文档规范》§4 已完成任务表的固定列（顺序不可变）。"""
+
+REQUIRED_TODO_COLUMNS = (
+    "编号",
+    "任务",
+    "状态",
+    "工时",
+    "依赖",
+    "排期窗口",
+    "备注",
+    "偏差与遗留",
+)
+"""《计划文档规范》§5 剩余任务排期表的固定列（顺序不可变）。"""
+
+FULL_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+"""完成日期必须是完整日期（`--lint` 用；盘点模式容忍括注）。"""
+
+WINDOW_RANGE_RE = re.compile(r"^\d{4}-\d{2}-\d{2} ~ \d{4}-\d{2}-\d{2}$")
+"""排期窗口·区间形态（分隔符固定 ` ~ `）。"""
+
 
 @dataclass(frozen=True)
 class Task:
@@ -272,6 +300,120 @@ def parse_plan(
         or "未识别"
     )
     return PlanInfo(repo, project, plan_label, labels, len(tasks)), tasks, problems
+
+
+def window_kind(text: str) -> str:
+    """判定排期窗口形态：`区间` / `单日` / `搁置`；不合规返回空串。"""
+    if not text:
+        return ""
+    if text == "搁置" or text.startswith("搁置（"):
+        return "搁置"
+    if FULL_DATE_RE.match(text):
+        return "单日"
+    if WINDOW_RANGE_RE.match(text):
+        return "区间"
+    return ""
+
+
+def lint_plan(path: Path, plan_label: str) -> list[str]:
+    """按《计划文档规范》体检一份计划表的列形与取值（`--lint`）。"""
+    problems: list[str] = []
+    header: tuple[str, ...] = ()
+    header_line = 0
+    kind = ""
+    seen_keys: dict[str, int] = {}
+
+    def close_table() -> None:
+        if not header:
+            return
+        if kind == "done":
+            expected, why = REQUIRED_DONE_COLUMNS, "已完成表列名或顺序不符"
+        elif kind == "todo":
+            expected, why = REQUIRED_TODO_COLUMNS, "剩余任务表列名或顺序不符"
+        else:
+            expected, why = (
+                REQUIRED_TODO_COLUMNS,
+                "表头无法识别（缺「状态」与「完成日期」）",
+            )
+        if header != expected:
+            problems.append(
+                f"{plan_label}:{header_line}: {why}；期望 {'|'.join(expected)}，实得 {'|'.join(header)}"
+            )
+
+    lines = path.read_text(encoding="utf-8").splitlines()
+    for lineno, line in enumerate(lines, 1):
+        if not line.lstrip().startswith("|"):
+            close_table()
+            header, kind = (), ""
+            continue
+        cells = split_row(line)
+        if cells is None:
+            continue
+        if HEADER_KEY in cells and HEADER_TASK in cells:
+            close_table()
+            header_line = lineno
+            header = tuple(cells)
+            if HEADER_FINISH in cells:
+                kind = "done"
+            elif HEADER_STATUS in cells:
+                kind = "todo"
+            else:
+                kind = ""
+            continue
+        if not header:
+            continue
+        if len(cells) != len(header):
+            problems.append(
+                f"{plan_label}:{lineno}: 列数 {len(cells)} ≠ 表头 {len(header)}"
+            )
+            continue
+        row = dict(zip(header, cells, strict=False))
+        key = cells[0]
+        if TASK_KEY_RE.match(key):
+            if key in seen_keys:
+                problems.append(
+                    f"{plan_label}:{lineno}: 编号 {key} 重复（首次见第 {seen_keys[key]} 行）"
+                )
+            else:
+                seen_keys[key] = lineno
+        if not TASK_KEY_RE.match(key):
+            continue  # 占位行（如「（无）」）只校列数，不校状态 / 窗口
+        if kind == "done":
+            finish = row.get(HEADER_FINISH, "")
+            if not FULL_DATE_RE.match(finish):
+                problems.append(
+                    f"{plan_label}:{lineno}: {key} 完成日期「{finish}」应为 YYYY-MM-DD"
+                )
+            continue
+        if kind != "todo":
+            continue
+        status = row.get(HEADER_STATUS, "")
+        if status not in LEGAL_STATUSES:
+            problems.append(
+                f"{plan_label}:{lineno}: {key} 状态「{status}」不在合法取值"
+            )
+        elif status in DONE_STATUSES:
+            problems.append(
+                f"{plan_label}:{lineno}: {key} 状态「{status}」应迁入已完成任务表"
+            )
+        window = row.get(HEADER_WINDOW, "")
+        if not window_kind(window):
+            problems.append(
+                f"{plan_label}:{lineno}: {key} 排期窗口「{window}」不合规（区间 / 单日 / 搁置）"
+            )
+    close_table()
+    if not seen_keys:
+        problems.append(f"{plan_label}: 未识别到任何任务行（表头缺失或列形变更）")
+    return problems
+
+
+def lint_workspace(ws_root: Path, repos: tuple[str, ...]) -> tuple[list[str], int]:
+    """体检工作区内全部计划表；返回问题清单与计划表份数。"""
+    plans_files, _ = discover_plans(ws_root, repos)
+    problems: list[str] = []
+    for _repo, _project, path in plans_files:
+        problems.extend(lint_plan(path, path.relative_to(ws_root).as_posix()))
+    return problems, len(plans_files)
 
 
 def discover_plans(
@@ -542,6 +684,15 @@ def self_test() -> int:
         checks.append(
             ("只看逾期剩 1 项", len(select_tasks(report.tasks, args, today)) == 1)
         )
+        lint_problems, plan_count = lint_workspace(root, ("bms", "mdm", "biz"))
+        joined = "\n".join(lint_problems)
+        checks.append(("体检覆盖 3 份计划表", plan_count == 3))
+        checks.append(
+            ("体检报列形不符", "列名或顺序不符" in joined or "表头无法识别" in joined)
+        )
+        checks.append(("体检报非法状态", "状态「收尾中」不在合法取值" in joined))
+        checks.append(("体检报窗口不合规", "排期窗口「—」不合规" in joined))
+        checks.append(("体检报日期带括注", "完成日期「2026-10-22（" in joined))
     failures = [name for name, ok in checks if not ok]
     for name, ok in checks:
         print(f"  [{'通过' if ok else '失败'}] {name}")
@@ -593,6 +744,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--today", help="基准日 YYYY-MM-DD（缺省今天；复盘或自测用）")
     parser.add_argument("--json", action="store_true", help="输出 JSON（机器可读）")
     parser.add_argument("--check", action="store_true", help="有未完成任务即退出码 1")
+    parser.add_argument(
+        "--lint",
+        action="store_true",
+        help="只体检计划表格式（列形 / 状态 / 窗口 / 重复编号）",
+    )
     parser.add_argument("--self-test", action="store_true", help="跑内置用例")
     return parser
 
@@ -612,6 +768,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"--today 需形如 2026-10-26，收到：{args.today}", file=sys.stderr)
         return 2
     repos = tuple(args.repo) if args.repo else REPO_NAMES
+    if args.lint:
+        problems, count = lint_workspace(root, repos)
+        print(f"体检计划表 {count} 份：问题 {len(problems)} 处")
+        for problem in problems:
+            print(f"- {problem}")
+        return 1 if problems else 0
     report = collect(root, repos)
     if not report.plans:
         print(

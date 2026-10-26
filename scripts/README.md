@@ -8,7 +8,7 @@
 | --- | --- |
 | `tools/workspace/` | 一键搭建工作区：`setup_workspace.py` 克隆 bms / 产品 / test 仓、建三处软链、核对分支与本地待办；入口 `搭建工作区.sh`（Linux）/ `搭建工作区.bat`（Windows）。用法见 [README](../README.md)「从零搭建工作区」节 |
 | `tools/workspace/` | 工作区卫生护栏：`check_workspace_hygiene.py` 检查临时 / 日志文件是否只落在工作区根 `tmp/` 与各仓 `.cache/`（违规退出码 1），`--clean` 隔离到 `tmp/_quarantine/<时间戳>/`；入口 `检查工作区卫生.sh` / `.bat`。已接入 bms 预检第一步（`bms/engkit.toml`），口径见 [AGENTS.md](../AGENTS.md)「工作区卫生」节 |
-| `tools/workspace/` | 计划表盘点：`list_pending_tasks.py` 扫描**全部平级仓**的计划表（`<仓>/<仓>文档/项目/<项目>/计划/*.md`，软链文档根按真实路径去重），列出未完成任务、逾期项与列形问题（兼容「状态」/「完成日期」/无状态列三种列形）；入口 `列出待办任务.sh` / `.bat`。用法：`python3 scripts/tools/workspace/list_pending_tasks.py [--all] [--repo bms] [--project 07B] [--overdue] [--exclude-parked] [--json] [--check] [--today YYYY-MM-DD] [--self-test]`；未完成即退出码 1（`--check`） |
+| `tools/workspace/` | 计划表盘点与体检：`list_pending_tasks.py` 扫描**全部平级仓**的计划表（`<仓>/<仓>文档/项目/<项目>/计划/*.md`，软链文档根按真实路径去重），列出未完成任务 / 逾期项 / 列形问题（兼容「状态」/「完成日期」/无状态列三种列形）；`--lint` 按《计划文档规范》§4/§5 校列名顺序、列数、状态取值、「已完成」是否误留剩余表、窗口形态（区间 / 单日 / 搁置）、完成日期形态与编号重复。入口 `列出待办任务.sh` / `.bat`。用法：`python3 scripts/tools/workspace/list_pending_tasks.py [--all] [--repo bms] [--project 07B] [--overdue] [--exclude-parked] [--sort window|task] [--json] [--check] [--lint] [--today YYYY-MM-DD] [--self-test]`；`--check` / `--lint` 命中问题即退出码 1 |
 
 ## 职责边界
 
