@@ -4,6 +4,8 @@
 # 本地数据库目录（各仓库统一放 database/<仓库>/；本地运行产物，不入库）
 database/
 # 项目临时目录（临时文件 / 截图 / 脚本草稿等；即使调整上方白名单也始终不入库）
+# 落点红线见 AGENTS.md「工作区卫生」节：日志 / 临时文件只许落本目录，护栏由
+# scripts/tools/workspace/check_workspace_hygiene.py 执行（已接入 bms 预检第一步）。
 tmp/
 !/.gitignore
 # 检索可见性规则（rg 类工具读取，不影响 git 跟踪本身）
@@ -18,6 +20,8 @@ tmp/
 !/README.md
 !/LICENSE
 !/.gitattributes
+# 行尾口径：工作区根与各仓一致的 EditorConfig（end_of_line = lf）
+!/.editorconfig
 !/scripts/
 # Python 字节码缓存：!/scripts/ 白名单放行了整个目录，需单独排掉缓存
 scripts/**/__pycache__/
