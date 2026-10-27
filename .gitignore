@@ -22,6 +22,8 @@ tmp/
 !/.gitattributes
 # 行尾口径：工作区根与各仓一致的 EditorConfig（end_of_line = lf）
 !/.editorconfig
+# 镜像构建上下文排除规则（2026-10-27 起产品镜像构建上下文为工作区根，见 AGENTS.md「依赖管理」节）
+!/.dockerignore
 !/scripts/
 # Python 字节码缓存：!/scripts/ 白名单放行了整个目录，需单独排掉缓存
 scripts/**/__pycache__/

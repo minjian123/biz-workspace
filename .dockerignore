@@ -1,0 +1,41 @@
+# 工作区根构建上下文排除规则（mdm 运行镜像；2026-10-27 起构建上下文为工作区根）
+#
+# 为什么是工作区根：`bms-core` 已改为**路径依赖**（`mdm/backend/pyproject.toml` 的
+# `../../bms/backend/libs/bms_core`），镜像内需同时具备 `mdm/` 与 `bms/backend/libs/bms_core`，
+# Docker 只能从**单一上下文**取其内容，故上下文上移到工作区根（构建命令见 `mdm/deploy/Dockerfile` 头部）。
+#
+# 只排除「与本镜像无关」与「大体积 / 本地产物」；新增平级产品仓时按需追加排除。
+
+# 版本库与工作区配置
+.git/
+.gitignore
+.ignore
+*.code-workspace
+
+# 本地产物与临时目录（工作区卫生红线：临时文件只落 tmp/）
+tmp/
+**/.cache/
+**/.git/
+
+# 依赖与构建产物（本地均为外置符号链接，容器内一律现装）
+**/node_modules/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.coverage
+**/coverage.json
+*.db
+*.log
+
+# 与本镜像无关的平级仓与文档（缩小上下文、避免误触发层缓存失效）
+biz/
+cws/
+engkit/
+test/
+mdm/mdm文档/
+bms/bms文档/
+mdm/frontend/
+mdm/scripts/
+mdm/deploy/compose/
+mdm/deploy/.env.example
