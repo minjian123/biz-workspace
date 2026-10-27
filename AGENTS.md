@@ -56,7 +56,7 @@
 - **pnpm 单一 workspace**：`bms/pnpm-workspace.yaml` 收敛 `frontend/packages/*`、`frontend/apps/*`、`frontend/modules/*`；`pnpm-lock.yaml` 单一锁文件（必须提交）；平台基座包用 `workspace:*` 协议。pnpm 11 只读 workspace 里 `allowBuilds`（package.json 的 `pnpm` 字段不读）。
 - **严格依赖树（幽灵依赖零容忍）**：import 了哪个包就在该工程 `package.json` 声明哪个包；`pnpm install --frozen-lockfile` 是唯一安装入口（CI 同口径）。
 - **CI 一体**：前端 job 内 `pnpm install --frozen-lockfile` 现装（镜像不再预置依赖），缓存走 `npm_config_store_dir=/cache/pnpm/store` 等 variables。详见 bms 文档 `bms文档/资料/开发机/linux/pnpm部署使用说明.md` 与 `uv部署使用说明.md`。
-- **跨仓基座用路径依赖，不用「git 源 + 锁 SHA」**（2026-10-27 拍板）：产品仓对 `bms-core` 一律声明 `path = "../../bms/backend/libs/bms_core"`（editable）——本地改基座即时生效，无需推送与改 rev；代价与配套三处：① 产品包导入期声明 `BMS_BACKEND_ROOT`（editable 后基座工程根会搜到 bms 仓根）；② 产品仓 CI 先把 bms 克隆到 `../bms`（ref 由 CI 变量锁）；③ 产品镜像构建上下文取**工作区根**（排除规则见工作区根 `.dockerignore`），Dockerfile 把基座源码 COPY 到相对路径成立处。`engkit`（工具链）仍为 git 源 + 锁 SHA（其改动频率低、且 CI 已单独克隆）。
+- **跨仓基座用路径依赖，不用「git 源 + 锁 SHA」**（2026-10-27 拍板）：产品仓对 `bms-core` 一律声明 `path = "../../bms/backend/libs/bms_core"`（editable）——本地改基座即时生效，无需推送与改 rev；代价与配套三处：① 产品包导入期声明 `BMS_BACKEND_ROOT`（editable 后基座工程根会搜到 bms 仓根）；② 产品仓 CI 先把 bms 克隆到 `../bms`（ref 由 CI 变量锁）；③ 产品镜像构建上下文取**工作区根**（排除规则见工作区根 `.dockerignore`），Dockerfile 把基座源码 COPY 到相对路径成立处。**`engkit` 同为路径依赖**（`bms` 与 `mdm` 两仓，2026-10-27 同批改）：CI 侧 `scripts/tools/ci/engkit_setup.sh` 早已把 engkit 克隆到 `../engkit`，故只改 sources + 重锁。**镜像口径随之变化**：dev 组含 engkit 路径依赖而镜像内无该源码，故镜像构建的 `uv sync` 一律带 `--no-dev`（开发件由 CI job 先克隆 engkit 再 `uv sync --frozen` 装入；实测：路径依赖缺失时含 dev 的 sync 报错、`--no-dev` 正常）。
 
 ## 代码与文档检索
 
