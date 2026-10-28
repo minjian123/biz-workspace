@@ -31,7 +31,7 @@
 │   ├── mdm文档 -> ../mdm/mdm文档  # 主数据文档软链（含在 .gitignore，不入库）
 │   └── test文档 -> ../test/test文档   # 测试资产软链（含在 .gitignore，不入库）
 ├── engkit/                # 跨仓工程化工具包（独立 git 仓库，必选）
-│   ├── src/engkit/        # 包源码（links / docs-scope / preflight / run-once / kiwi …）
+│   ├── src/engkit/        # 包源码（links / docs-scope / preflight / run_once / kiwi …）
 │   ├── engkit文档/         # 工具包文档根（概述 / 接入说明 / 开发约定）
 │   └── bms文档 -> ../bms/bms文档  # 基座软链（自动建立，不入库）
 ├── test/                  # 测试资产（独立 git 仓库，可选克隆）

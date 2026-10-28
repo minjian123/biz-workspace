@@ -32,7 +32,7 @@
 - **各仓只放配置**：仓根一份 `engkit.toml`（文档根 / 工程清单 / 选测规则 / 预检步骤 / 覆盖率门禁 / 拦截口径）。包内**不得出现任何仓名或目录字面**（engkit 侧机器断言）；新增仓库只加配置、不改代码。
 - **bms 侧为薄包装**：`bms/scripts/tools/{preflight,base-check}/` 下入口只转发参数与退出码（定位顺序 `import engkit` → `ENGKIT_HOME` → 同级 `../engkit`），**不得写第二套推导或判定逻辑**；`engkit/` 与 `bms/` 必须**平级并置**。
 - **mdm 侧为 git 源依赖**：`backend/pyproject.toml` 锁 rev（与 `bms-core` 同构），`uv run engkit links|docs-scope|preflight` 直接可用；预检含静态 + 契约门禁 + 定向用例 + 覆盖率门禁（一条命令）。
-- **入口与口径**：五个常用子命令 `links` / `docs-scope` / `preflight` / `run-once` / `kiwi`，另有 `selection` / `run-selected` / `coverage` / `guard`。预检步骤、预算、阈值一律改配置（`engkit.toml`），不改工具包代码；`pytest-xdist` 随 engkit 安装（各仓无需自装），缺装时并行档位显式降级串行。
+- **入口与口径**：五个常用子命令 `links` / `docs-scope` / `preflight` / `run_once` / `kiwi`，另有 `selection` / `run-selected` / `coverage` / `guard`。预检步骤、预算、阈值一律改配置（`engkit.toml`），不改工具包代码；`pytest-xdist` 随 engkit 安装（各仓无需自装），缺装时并行档位显式降级串行。
 - **门禁**：engkit 自身 `pytest` + `ruff` + `pyright` + 覆盖率（口径见《AI开发规范》「覆盖率要求」节），CI 双轨（基础门禁直跑 + 自举烟雾 `engkit preflight --fast`）。
 - **文档与接入**：`engkit/engkit文档/`（文档首页 → 概述「配置字段全表」→ 接入说明「新仓四步 + 已接入实例」→ 开发约定「包内红线」）；bms 主数据与测试相关口径仍以 bms 文档为准。
 
@@ -113,14 +113,14 @@
 
 ## 重命令不重跑（强制执行）
 
-- **分钟级重命令一律经 `run-once.py` 包装调用**：预检、全量 / 多目录 pytest、全仓 ruff、全仓 pyright 等，统一写成
-  `python3 scripts/tools/preflight/run-once.py -- <原命令>`（在 `bms/` 仓根）。
+- **分钟级重命令一律经 `run_once.py` 包装调用**：预检、全量 / 多目录 pytest、全仓 ruff、全仓 pyright 等，统一写成
+  `python3 scripts/tools/preflight/run_once.py -- <原命令>`（在 `bms/` 仓根）。
 - **禁止为「从输出里挑几行报错」整轮重跑重命令**：第一次已给出结论后，改看具体报错一律用**定向**命令——单文件
   `ruff check <文件>` / `ruff format --check <文件>` / `pyright <文件>`、单目录 `pytest <目录>`，秒级出结果。
 - 包装口径：缓存键 =「命令 + 工作目录 + 工作区指纹」，工作区指纹 = `HEAD` + 全部已跟踪变更与未跟踪文件内容哈希
   （**改一个源文件即失效**，不会拿旧结果掩盖新改动）；窗口内（缺省 30 分钟）命中即回放上次完整输出与退出码并标注
-  「回放」。改完代码想立刻重验加 `--force`；只想看缓存状态用 `--show`；缓存落 `.cache/run-once/`（已 gitignore）。
-- 与「预算护栏」的关系：预检自带的单步 / 总体超时是**防误跑长命令**；`run-once.py` 是**防重复跑同一命令**，两者叠加，
+  「回放」。改完代码想立刻重验加 `--force`；只想看缓存状态用 `--show`；缓存落 `.cache/run_once/`（已 gitignore）。
+- 与「预算护栏」的关系：预检自带的单步 / 总体超时是**防误跑长命令**；`run_once.py` 是**防重复跑同一命令**，两者叠加，
   不得以「反正有护栏」为由重复执行。
 
 ## 工作区卫生（临时 / 日志文件落点红线）
