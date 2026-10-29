@@ -5,143 +5,134 @@
 **注意1**：用户是中国人，英文看不懂。
 **注意2**：如果缺乏对应知识，就去网上查资料。
 
-## 工作区模型（bizs / cws）
+## 工作区
 
 - 本目录是**工作区**（组合层）：以 **bms 克隆**为基座，与 **engkit 克隆**（跨仓工程化工具包，必选）及一个或多个产品仓库克隆平级并置。
   - `bizs/`：`bms/`（BMS 平台/基座）+ `engkit/`（跨仓工程化工具包）+ `biz/`（biz 企业运营管理产品）+ `mdm/`（mdm 主数据管理产品）
   - `cws/`：`bms/`（BMS 平台/基座）+ `engkit/`（跨仓工程化工具包）+ `cw/`（CW 创作系统产品）
-- **同步靠各自 git 远端**：改动任一处 bms 克隆 → 提交推送 → 其他工作区的 `bms/` 克隆 `git pull` 自然更新，合并与冲突走 git 机制；产品仓库同理。**没有文档同步脚本**（原 base-sync 机制已退役）。
+
 - **产品仓库只放产品专属内容**：产品文档根按项目命名（如 `biz文档/`、`mdm文档/`、`cw文档/`），不再在文档根下用软链占位基座目录（`规范`/`资料`/`资源`）；各产品仓库根设软链 `bms文档 → ../bms/bms文档` 与产品文档根并排，产品文档引用基座统一用 `../bms文档/…`。**主数据产品 mdm 与其他产品互引**：`bms/mdm文档 → ../mdm/mdm文档`、`biz/mdm文档 → ../mdm/mdm文档`（产品仓库根软链，同 `bms文档` 口径，正文分治见下）；通过 `bms文档` 软链编辑基座文件时，实际修改的是 bms 克隆，须回 bms 仓库提交，通过 `mdm文档` 软链编辑主数据文档时须回 mdm 仓库提交。
+
 - **引用写法分治**：bms 正文提及主数据写**纯文本路径**（`mdm/mdm文档/…`，不写相对链接——CI 只 clone bms 会判断链，可类比 test 文档约定）；biz / mdm 正文可用相对链接（`../mdm文档/…`、`../bms文档/…`）跨仓跳转。
-- **测试资产放独立仓库 `test/`（可选克隆）**：承载用例模板、测试数据、压测场景、探索性测试记录与测试侧脚本，文档根 `test文档/`（与 `bms文档/`、`biz文档/`、`mdm文档/` 同构）；**双向软链且两侧均不入 git**——`bms/test文档 → ../test/test文档`（**bms 仓根**，与 `bms文档/` 同级）、`test/bms文档 → ../bms/bms文档`（test 仓根）。bms 侧软链已写 `bms/.gitignore`，test 侧 `.gitignore` 忽略 `bms文档`。**bms 文档正文禁止写真链接指向测试文档或主数据文档**（CI 只 clone bms 会判断链），需提及时写纯文本路径。边界详见 bms《测试规范》「测试资产落点与组织」节：被流水线直接调用的脚本（`check-base.py`、`check-status.py`、`defect/*`、`governance/*`）留在 `bms/scripts/tools/` 不迁。
+
+- **测试资产放独立仓库 `test/`（可选克隆）**：承载用例模板、测试数据、压测场景、探索性测试记录与测试侧脚本，文档根 `test文档/`（与 `bms文档/`、`biz文档/`、`mdm文档/` 同构）；**双向软链且两侧均不入 git**——`bms/test文档 → ../test/test文档`（**bms 仓根**，与 `bms文档/` 同级）、`test/bms文档 → ../bms/bms文档`（test 仓根）。bms 侧软链已写 `bms/.gitignore`，test 侧 `.gitignore` 忽略 `bms文档`。**bms 文档正文禁止写真链接指向测试文档或主数据文档**（CI 只 clone bms 会判断链），需提及时写纯文本路径。边界详见 bms《测试规范》「测试资产落点与组织」节。
 - 工作区根目录本身是一个 **git 仓库**，只跟踪工作区配置（`AGENTS.md`、`README.md`、`scripts/`、`.opencode/`、`.gitignore`、`.vscode/`、`*.code-workspace`）；`bms/`、产品目录一律忽略。新工作区可先克隆本配置仓库，再运行 `scripts/tools/workspace/搭建工作区.sh`（或 `搭建工作区.bat`，用法见 `README.md`「从零搭建工作区」节）自动克隆各仓库并建软链；扩展新组合只需在工作区根新增产品仓库克隆（bms 保持平级不动）。
 - IDE 使用：用工作区根的 `*.code-workspace` 打开（「工作区配置 / BMS 基座 / 产品」多根并置）；产品文档以产品仓库根的 `bms文档` 软链引用基座，权威基座文档统一从 BMS 根查看。
 - 目录使用中文名；文档根按项目命名（bms 为 `bms文档/`、产品为 `<产品>文档/`，如 `biz文档/`、`cw文档/`）；回复与文档保持中文。
 
-## bms 仓（基座与平台）
+> **本节细节**：《[平台可扩展性规划](bms/bms文档/规划/平台可扩展性规划.md)》4.3「工作区模型与基座引用」（软链、配置仓、权威源、跨层引用盲区）；测试资产组织见《[测试规范](bms/bms文档/规范/测试规范.md)》14「测试资产落点与组织」；搭建步骤见 [README](README.md)「从零搭建工作区」。
 
-- BMS（基础管理系统）定位平台：后端管理用途；当前尚未有源代码，规划已定案——技术栈、功能模块、开发计划与验收标准见 `bms/bms文档/规划/项目规划说明.md`，动手写代码前先读该文件。
-- 入口文档：`bms/README.md`（导航）、`bms/bms文档/文档首页.md`（全量导航）、`bms/bms文档/规划/平台可扩展性规划.md`（三层模型、业务不入平台、工作区模型）。
-- 平台机制、扩展接入流程、标识符（表前缀/业务码/错误码段/事件域）登记以 bms 文档为权威；基座边界见 `bms/bms文档/基座文档清单.md`。
-- `.opencode/` 下的插件按各自说明维护（勿手改生成物）；`opencode.json` 的 `plugins` 数组登记自定义插件。`.reasonix/`、reasonix.toml 由 IDE 工具生成——勿手动修改。
+## 各仓入口
 
-## 跨仓工程化工具包（engkit）
+| 仓 | 定位 | 入口文档 |
+| --- | --- | --- |
+| `bms/` | BMS 平台 / 基座（后端管理平台，业务不入平台） | `bms/README.md`、`bms/bms文档/文档首页.md` |
+| `engkit/` | 护栏与开发脚本的**唯一实现**（文档校验 / 预检 / 选测 / 覆盖率 / 用例登记） | `engkit/README.md`、`engkit/engkit文档/文档首页.md` |
+| `mdm/` `biz/` `cw/` | 产品仓（只放产品专属内容） | 各仓 `README.md` |
 
-护栏与开发脚本的**唯一实现**在独立仓 `engkit`（文档根 `engkit文档/`，包源码 `src/engkit/`）：文档**链接与锚点**校验、文档**口径护栏**（进度类字段只落阶段计划）、**预检**与**重命令包装**（缓存回放 / 未包装拦截）、**选测**与**覆盖率门禁**、**Kiwi 用例登记**。
+- 平台机制、扩展接入、标识符（表前缀 / 业务码 / 错误码段 / 事件域）登记以 bms 文档为权威。
+- 工具配置只在各仓根 `engkit.toml`；新增仓库只加配置、不改工具包代码。
 
-- **各仓只放配置**：仓根一份 `engkit.toml`（文档根 / 工程清单 / 选测规则 / 预检步骤 / 覆盖率门禁 / 拦截口径）。包内**不得出现任何仓名或目录字面**（engkit 侧机器断言）；新增仓库只加配置、不改代码。
-- **bms 侧为薄包装**：`bms/scripts/tools/{preflight,base-check}/` 下入口只转发参数与退出码（定位顺序 `import engkit` → `ENGKIT_HOME` → 同级 `../engkit`），**不得写第二套推导或判定逻辑**；`engkit/` 与 `bms/` 必须**平级并置**。
-- **mdm 侧为 git 源依赖**：`backend/pyproject.toml` 锁 rev（与 `bms-core` 同构），`uv run engkit links|docs-scope|preflight` 直接可用；预检含静态 + 契约门禁 + 定向用例 + 覆盖率门禁（一条命令）。
-- **入口与口径**：五个常用子命令 `links` / `docs-scope` / `preflight` / `run_once` / `kiwi`，另有 `selection` / `run-selected` / `coverage` / `guard`。预检步骤、预算、阈值一律改配置（`engkit.toml`），不改工具包代码；`pytest-xdist` 随 engkit 安装（各仓无需自装），缺装时并行档位显式降级串行。
-- **门禁**：engkit 自身 `pytest` + `ruff` + `pyright` + 覆盖率（口径见《AI开发规范》「覆盖率要求」节），CI 双轨（基础门禁直跑 + 自举烟雾 `engkit preflight --fast`）。
-- **文档与接入**：`engkit/engkit文档/`（文档首页 → 概述「配置字段全表」→ 接入说明「新仓四步 + 已接入实例」→ 开发约定「包内红线」）；bms 主数据与测试相关口径仍以 bms 文档为准。
+> **细节**：平台三层模型与扩展接入见《[平台可扩展性规划](bms/bms文档/规划/平台可扩展性规划.md)》与《[项目规划说明](bms/bms文档/规划/项目规划说明.md)》「平台扩展接入流程」；基座边界见《[基座文档清单](bms/bms文档/基座文档清单.md)》；engkit 的「各仓只放配置 / 包内不含仓名」见 [engkit 文档首页](engkit/engkit文档/文档首页.md) 与《[工具包开发约定](engkit/engkit文档/规范/工具包开发约定.md)》。
 
-## 开发环境与远程操作（脚本在 `bms/scripts/tools/`）
+## 动手前
 
-- 开发服务器（内网常开：GitLab CE、开发依赖服务、MySQL/PostgreSQL/达梦 DM8 三库）、Windows 服务器与开发机（Ubuntu）。远程操作方式与命令模板见 bms `bms文档/资料/开发服务器/`（linux/windows 各一份「部署使用说明总览」）；服务器/开发机名称、内网 IP 与账号属于本地资源信息，一律不写入公开文档，以本地凭据文档为准。
-- **服务器电源控制**（唤醒/睡眠/关机工具链，详见 bms `bms文档/资料/开发服务器/linux/开发服务器电源控制使用说明.md`）：
-  - 远程唤醒：`python3 bms/scripts/tools/wol/wake_mjbk.py`（发 WOL 魔术包并等待 SSH 就绪，低风险）；入口 `bms/scripts/tools/wol/唤醒mjbk.sh`。
-  - 远程睡眠：`python3 bms/scripts/tools/wol/sleep_mjbk.py`（SSH 执行 `systemctl suspend` 进入 S3，含确认）；入口 `bms/scripts/tools/wol/睡眠mjbk.sh`。
-  - 每日自动睡眠/唤醒：服务器侧 systemd timer（每晚 00:00 自动睡、08:00 由 RTC 自醒）。
-  - 远程关机：`python3 bms/scripts/tools/wol/shutdown_mjbk.py`（**破坏性操作，执行前必须经用户确认**）；入口 `bms/scripts/tools/wol/关机mjbk.sh`。
-  - 凭据从 `bms/deploy/.env` 读取（键位见 `bms/deploy/.env.example`），脚本不硬编码密码；SSH 连接走开发机公钥免密。
-- **浏览器真机验证走 Playwright MCP**（工具名 `mcp__playwright__*`，登记与用法见 bms《[CodeBuddy部署使用说明](bms/bms文档/资料/开发机/linux/CodeBuddy部署使用说明.md)》「浏览器真机验证」节）：导航 / 点击 / 填表 / 截图 / 读控制台；**页面结构用 `browser_snapshot` / `browser_find`**（a11y 树内联返回、带 `[ref=eNN]`，`.playwright-mcp/*.yml` 不可依赖）；截图落工作区 `tmp/`（工具只回路径，不占模型图片额度）；控制台只认预期错误（favicon 404 / 模块宿主未起 `remoteEntry` 拒连 / 未登录 401）。**长会话首选 MCP**（`browser_find` 可省量）；`playwright-cli` / `agent-browser` 作极短会话兜底，勿为「省事」回退到 shell 里的 `playwright-cli`。
-- 机器凭据见 bms `bms文档/用户文档/本地资源.md`（已 gitignore，**勿恢复跟踪、勿提交、勿写入其他文档**）；凭据副本统一存各仓库 `deploy/.env`（已 gitignore，勿提交，勿将 .env 内容写入其他文档）。
+- 动手前先读《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》，按「本地资源 → 规划 → 规范 → 设计 → 项目 → 需求 → 任务 → 计划 → 详细设计」建上下文；**先设计后编码**，偏差回写设计。
+- 生成文档前读《[文档生成规范](bms/bms文档/规范/文档生成规范.md)》，三条最常踩的：
+  - **逻辑图形**（流程 / 时序 / 状态 / 类 / 关系 / 甘特）一律 mermaid；**目录树、文件清单**用框线文本（`└├│─` + 行尾 `#`），不得画成 mermaid；**线框图 / 可交互原型**用 html。
+  - html 的图片 / 音视频放同级「资源」下同名目录。
+  - md 预览 mermaid 用 VS Code **内置扩展**，**勿装** `bierner.markdown-mermaid`（会抢注配置键、日志刷错）。
+- 命名（代码 / 数据库 / API / 基础设施）遵循《[命名规范](bms/bms文档/规范/命名规范.md)》。
+- 测试分层、覆盖率门禁（100% 行 + 分支）与测试资产落点见《[测试规范](bms/bms文档/规范/测试规范.md)》。
 
-## 依赖管理（前端 pnpm / 后端 uv，统一外置）
+## 日常怎么干
 
-- **依赖不进仓库树**：前端 node_modules（根 + 各 workspace 工程）整体外置到本地依赖仓，原位是符号链接；后端 .venv 同样外置（`backend/.venv` 链接到依赖仓 `backend-venv`，不依赖 `UV_PROJECT_ENVIRONMENT`）。检索工具默认不跟随符号链接 → 检索零污染。
-- **本地依赖仓位置**：环境变量 `DEPS_DIR` > `bms/deploy/.env` 的 `DEPS_DIR=` > 默认 `$HOME/dev-deps/bms`（本地资源路径，勿写入公开文档/仓库文件）。
-- **维护脚本** `bms/scripts/tools/deps/`：三个入口 `外置依赖` / `还原依赖` / `重装依赖`（**Python 单一实现** + Linux `.sh` / Windows `.bat` 瘦包装，跨平台同口径，2026-10-16 起）——`外置依赖`（外置态，推荐常驻）、`还原依赖`（pnpm install / uv sync 前必须还原，安装器见符号链接会误判跳过）、`重装依赖`（还原 → 安装 → 再外置；`--frontend-only` / `--backend-only`）。
-- **pnpm 单一 workspace**：`bms/pnpm-workspace.yaml` 收敛 `frontend/packages/*`、`frontend/apps/*`、`frontend/modules/*`；`pnpm-lock.yaml` 单一锁文件（必须提交）；平台基座包用 `workspace:*` 协议。pnpm 11 只读 workspace 里 `allowBuilds`（package.json 的 `pnpm` 字段不读）。
-- **严格依赖树（幽灵依赖零容忍）**：import 了哪个包就在该工程 `package.json` 声明哪个包；`pnpm install --frozen-lockfile` 是唯一安装入口（CI 同口径）。
-- **CI 一体**：前端 job 内 `pnpm install --frozen-lockfile` 现装（镜像不再预置依赖），缓存走 `npm_config_store_dir=/cache/pnpm/store` 等 variables。详见 bms 文档 `bms文档/资料/开发机/linux/pnpm部署使用说明.md` 与 `uv部署使用说明.md`。
-- **跨仓基座用路径依赖，不用「git 源 + 锁 SHA」**（2026-10-27 拍板）：产品仓对 `bms-core` 一律声明 `path = "../../bms/backend/libs/bms_core"`（editable）——本地改基座即时生效，无需推送与改 rev；代价与配套三处：① 产品包导入期声明 `BMS_BACKEND_ROOT`（editable 后基座工程根会搜到 bms 仓根）；② 产品仓 CI 先把 bms 克隆到 `../bms`（ref 由 CI 变量锁）；③ 产品镜像构建上下文取**工作区根**（排除规则见工作区根 `.dockerignore`），Dockerfile 把基座源码 COPY 到相对路径成立处。**`engkit` 同为路径依赖**（`bms` 与 `mdm` 两仓，2026-10-27 同批改）：CI 侧 `scripts/tools/ci/engkit_setup.sh` 早已把 engkit 克隆到 `../engkit`，故只改 sources + 重锁。**镜像口径随之变化**：dev 组含 engkit 路径依赖而镜像内无该源码，故镜像构建的 `uv sync` 一律带 `--no-dev`（开发件由 CI job 先克隆 engkit 再 `uv sync --frozen` 装入；实测：路径依赖缺失时含 dev 的 sync 报错、`--no-dev` 正常）。
+### 开发环：改完即测（最常用，别用预检）
 
-## 代码与文档检索
+- 命令：`bms/scripts/tools/preflight/测试改动内容.sh`（Windows `.bat`；mdm 同款；等价 `engkit run-changed`）。
+- 干什么：只跑 git 改动的**直接依赖**测试 + 前端受影响包 + 改动文件 `ruff`；**不采集覆盖率**、不退化工程级全量。
+- 何时用：改完一个 bug / 小改动，想快速知道有没有搞坏 → 就用它。
+- 报错只看那一条、改完再跑；**不要**为「看看还有没有别的问题」整体重跑。
+- 细节（依赖深度、附加护栏步骤、与推送环的分工）：《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》「开发环 / 推送环」节。
 
-- **检索前必读本节**——检索范围由工作区根**两个忽略文件**决定（`.gitignore` 白名单管「能提交什么」、`.ignore` 管「能检索到什么」）；**勿删 `.ignore` 的五行反消除规则**（`bms/`、`mdm/`、`biz/`、`engkit/`、`test/`），新增平级仓库须同步 `.ignore`、`setup_workspace.py` 的 `IGNORE_TEMPLATE` 与 `*.code-workspace` 的 `folders`。分工、实测数据与核对命令见《[内容检索工具部署使用说明](bms/bms文档/资料/工具/内容检索工具部署使用说明.md#scope)》「检索范围与工作区忽略文件」节。
-- **优先用检索服务**：`bms/scripts/tools/search/` 提供代码+文档统一检索，按相关性排序返回 ≤10 条精简结果。**DSH / CodeBuddy / opencode 里优先用 MCP 工具调用**（见下条），不可用时退回命令行。三档按需选：
-  1. **不知道去哪找 / 关键词命中面宽** → 用检索服务（MCP 工具 `search_content`，或命令行 `python3 scripts/tools/search/search_mcp.py -q 关键词`）；
-  2. **已知精确符号或字面串** → `rg` 直接扫（全库毫秒级，够快）；
-  3. **已知在哪个域** → 限定目录后 `rg`（见下条）。
-- **MCP 工具（DSH / CodeBuddy / opencode 均已接入，优先用它）**：服务名 `bizssearch`，共三个工具。**调用名随 agent 而变**——DSH / CodeBuddy 为 `mcp__bizssearch__<工具名>`；opencode（V2 默认 Code Mode）为 `tools.bizssearch.<工具名>`，工具名本身相同——
-  - `mcp__bizssearch__search_content`：按相关性检索，返回路径 / 类型 / 标题 / 摘要 / 分数；参数 `query`、`kind`（doc/code/other）、`path`（路径子串）、`limit`（1-50）。
-  - `mcp__bizssearch__search_with_snippet`：检索并附命中行片段，**省 token 首选**（不必再读整文件确认上下文）；参数 `query`、`kind`、`limit`。
-  - `mcp__bizssearch__index_update`：增量刷新索引，无参数。
-  - **命中过多时先加 `kind` 或 `path` 收敛**，不要把 `limit` 调到 50 硬扫；仍不准再换关键词。
-  - 返回的 `path` 是**相对工作区根**的路径，读文件时按此拼接。
-  - 怀疑结果过时（刚改过文件）→ 先调 `index_update`（1~2 秒）再检索。
-  - 工具不可用（未重启 / 配置失效）时退回命令行，二者行为一致。
-- **索引维护**：索引**随工作区**落在 `<工作区根>/.cache/search/index.db`（约 62MB，已 gitignore），**手动刷新**——改完一批文档/代码后跑 `--update`（增量，约 1~2 秒）；怀疑索引滞后时跑 `--check`（比对索引与实际文件集，不一致退出码 1）。全量重建 `--rebuild` 约 40~70 秒。
-  - **跨工作区共享**：脚本按「当前会话工作目录」向上找 `bms/` 自动定位检索根，`bizs` 会话查 `bizs`、`cws` 会话查 `cws`，**各工作区共用同一条 MCP 配置**（DSH 在 `cordis.patch.yml`、CodeBuddy 在用户主目录 `.codebuddy/mcp.json` 各配一条；opencode 为项目级 `.opencode/opencode.json`，脚本参数写相对路径即可直接复制复用，配置示例见 bms《内容检索工具部署使用说明》5.6），索引互不干扰。
-  - **依赖装系统 Python**（`jieba` + `mcp`，两个纯 Python 包）：一次安装所有工作区与 agent 通用；**不要**装进 `backend/.venv`（uv 管理，会破坏依赖树）。
-- **工具级过滤（仍有效，与检索服务并用）**：靠检索工具自身的过滤能力收敛范围，三招按序用——① **限定目录**（按域进目录再检索，`path` 指到 `bms文档/设计/`、`backend/libs/bms_core/src/` 这类具体域）；② **限定扩展名**（`include` / `-g '*.md'`，排除配置与产物）；③ **精确关键词**（用领域术语而非泛词）。**目录限制的收敛效果远大于扩展名过滤**，所以「先想清楚去哪个域找」比「加多少过滤参数」更有效；实测数据见《[代码检索索引方式失效复盘](bms/bms文档/资料/知识档案/工程化与质量/代码检索索引方式失效复盘.md)》。
-- **禁用 `--no-ignore` / `-uu`**（会扫进依赖与构建产物，几十万文件）；确需更宽范围用 `-u`（保留 `.ignore` 与各仓 `.ignore` 的依赖屏蔽）。
-- **`-g` 白名单只影响 `--files` 列表、不经过忽略层**：`rg -g 'bms/**'` 会把 `.venv` 一起列出，据此判断"检索会不会扫到依赖"是错的；判定检索范围一律用不带 `-g` 的 `rg --files`。
-- **凭据红线**：`bms文档/用户文档/本地资源.md` 与各 `deploy/.env` 已 gitignore，检索结果里出现本地资源信息时不得写进文档或回答。
+### 推送：唯一入口，预检是它的内部步骤
 
-## 文档要求
+- 命令：`bms/scripts/tools/preflight/推送.py`（Linux `.sh` / Windows `.bat`；mdm 同款；等价 `engkit push`）。
+- 干什么：按**待推提交**自动选档 → 跑预检 → 通过才 `git push`。全为文档 → 快速档（静态 + 护栏，秒级）；含代码 / 配置 → 定向档（静态 + 定向用例 + 覆盖率门禁）。
+- 只验不推：加 `--check`；全量档：加 `--full`。
+- 前提：工作树必须干净（先提交）。**本地手动跑 `engkit preflight` 会被拒绝**，这是设计（只有推送与 CI 能触发）。
+- 细节（档位判据、`[push]` 配置、审计）：《[工程化工具包说明](engkit/engkit文档/概述/工程化工具包说明.md)》§4.3「预检段」；开发环 / 推送环分工见《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》。
 
-- **开发流程**：动手前先读《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》——按「本地资源 → 规划 → 规范 → 设计 → 项目 → 需求 → 任务 → 计划 → 详细设计」顺序建立上下文；先设计后编码，实施与测试以详细设计为准，偏差回写设计。
-- 格式与布局遵循 `bms/bms文档/规范/文档生成规范.md`，**生成文档前先读该文件**。
-- 图形按形态选画法（该文件 7.7 节）：**逻辑图形**（流程/时序/状态/类/关系/甘特）一律 mermaid；**目录树、文件清单**等罗列型内容用框线文本目录清单（`└├│─` + 行尾 `#` 注释），不得画成 mermaid（mindmap / graph TD）；**线框图/可交互原型**用 html 资产。
-- md 在 VS Code 预览 mermaid 由**内置扩展** `mermaid-markdown-features` 提供（1.142 起随内核发布），无需另装；**勿装 `bierner.markdown-mermaid`**——它会与内置扩展抢注同名 `markdown-mermaid.*` 配置键，日志持续刷「无法注册…此属性已注册」。
-- html 的相关图片、音频、视频等资源文件统一放到同级目录的"资源"文件夹下的同名目录中。
-- 项目内全部命名（代码、数据库、API、基础设施）遵循 `bms/bms文档/规范/命名规范.md`。
-- **公开文档红线**：随仓库推送到 GitHub 的文档（README.md、LICENSE 等）不得出现本地资源信息——开发服务器/开发机名称、内网 IP、端口、磁盘与目录、SSH/服务账号等一律不写，只保留泛化描述并指向本地文档（如《开发服务器部署使用说明总览》）；本地资源细节只允许存在于已 gitignore 的凭据文档与内网部署文档中。
+### 重命令：一律包装，禁止重复跑
 
-## 网络与镜像
+- 命令：`python3 scripts/tools/preflight/run_once.py -- <原命令>`（在 `bms/` 仓根）。
+- 适用：全量 / 多目录 `pytest`、全仓 `ruff`、全仓 `pyright`。未包装裸跑会被守卫拦下（`ENGKIT_ALLOW_UNWRAPPED=1` 只用于排查包装器本身）。
+- 缓存：同命令 + 同工作区指纹，30 分钟内命中即回放完整输出；改完要立刻重验加 `--force`，只看状态用 `--show`。
+- **不要为挑几行报错整轮重跑**：改看单文件 `ruff check <文件>` / `pyright <文件>` / `pytest <目录>`，秒级。
+- 细节（缓存键、守卫安装、`ruff` 原生二进制的覆盖边界）：《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》「重命令不重跑」节。
 
-- 涉及软件、组件、依赖、容器镜像等下载安装时，**优先使用国内镜像**（阿里云、清华 TUNA、中科大、华为云等），默认源访问不畅时立即切换镜像，不长时间等待。
-- 常用镜像：PyPI 用阿里云/清华源、npm 用淘宝（npmmirror）源、Docker Hub 用阿里云/华为云加速器、Windows 组件安装卡在微软源时改用本地/镜像分发方式。
-- **GitHub 加速用 ghfast.top**（实测有效）：前缀拼接法——`https://ghfast.top/https://github.com/<owner>/<repo>`，支持 release 下载与 `git ls-remote --tags`；取最新版本号用 `git ls-remote --tags <加速URL> | tail`（GitHub API 不走镜像代理）。mirror.ghproxy.com 已实测失效（页面抓不到 tag、API 不可代理），勿再用。
-- 安装类命令默认带国内源参数，文档与脚本中写明所用镜像地址。
+### 检索：找东西先用它
 
-## 讨论与确认（强制执行）
+- MCP `bizssearch`（DSH / CodeBuddy 为 `mcp__bizssearch__*`，opencode 为 `tools.bizssearch.*`）：
+  - `search_with_snippet`：带命中行片段，**最省 token，首选**；
+  - `search_content`：只返回路径 / 标题 / 摘要；
+  - `index_update`：刚改过文件、怀疑索引旧时先刷（1~2 秒）。
+- 选档：不知道去哪找 → 检索服务；已知精确符号 → `rg`；已知在哪 → 限定目录后 `rg`。命中太多先加 `kind` / `path` 收敛，别把 `limit` 拉满。
+- 命令行兜底：`python3 bms/scripts/tools/search/search_mcp.py -q 关键词`（在**工作区根**执行）；索引在 `<工作区根>/.cache/search/`，`--update` 增量、`--rebuild` 重建。
+- **禁用** `--no-ignore` / `-uu`（会扫进依赖与产物）。
+- 细节（安装、`.ignore` 与 `.gitignore` 分工、各 agent 的 MCP 配置、索引维护与实测）：《[内容检索工具部署使用说明](bms/bms文档/资料/工具/内容检索工具部署使用说明.md)》。
 
-- **凡是待用户拍板的事项（技术选型、方案取舍、范围划分、是否执行某项修改、执行方式等），必须先逐项提出并逐一确认，严禁擅自替用户拍板——包括不得按推荐值或默认值直接执行。**
-- **逐项确认必须使用 question 工具**，把本次所有待决项一次性列出（一项一个问题），每项格式固定：
-  - 候选选项至少 2 个；
-  - 推荐项放在第一位并标注"（推荐）"；
-  - 每个选项附一句差异说明。
-- **推荐项着眼长期**：候选选项的推荐一律优先**以后演化成本更低**的方案（可扩展 / 兼容 / 与设计节点一致 / 便于后续接入），不得为省眼前工作量推荐应付式方案；差异说明同时写明长期收益与迁移成本（若有）。
-- 不要顾虑问题数量，问的越多越细越好；宁可把一项问题拆成多项问题来提问，也不要合并问题、不要遗漏问题或简化成"你看着办"。
-- 用户未明确回答的项目保持未定，不得默认通过；继续追问，直到逐项确认完毕。
-- 全部确认后，把确认结果汇总成表格回显给用户，用户无异议后才进入执行。
-- 执行中如出现新的待拍板事项（原确认范围外），同样先询问再执行，不得自行扩展。
+### 文档校验
 
-## 重命令不重跑（强制执行）
+- `engkit links`：相对链接与锚点；改完文档就跑。
+- `engkit docs-scope`：进度类字段只允许落在阶段计划。
+- `engkit eol`：行尾检查（工作树 CRLF）。
+- 细节（三项护栏的判定与配置）：[engkit 文档首页](engkit/engkit文档/文档首页.md)、《[工程化工具包说明](engkit/engkit文档/概述/工程化工具包说明.md)》。
 
-- **分钟级重命令一律经 `run_once.py` 包装调用**：预检、全量 / 多目录 pytest、全仓 ruff、全仓 pyright 等，统一写成
-  `python3 scripts/tools/preflight/run_once.py -- <原命令>`（在 `bms/` 仓根）。
-- **禁止为「从输出里挑几行报错」整轮重跑重命令**：第一次已给出结论后，改看具体报错一律用**定向**命令——单文件
-  `ruff check <文件>` / `ruff format --check <文件>` / `pyright <文件>`、单目录 `pytest <目录>`，秒级出结果。
-- 包装口径：缓存键 =「命令 + 工作目录 + 工作区指纹」，工作区指纹 = `HEAD` + 全部已跟踪变更与未跟踪文件内容哈希
-  （**改一个源文件即失效**，不会拿旧结果掩盖新改动）；窗口内（缺省 30 分钟）命中即回放上次完整输出与退出码并标注
-  「回放」。改完代码想立刻重验加 `--force`；只想看缓存状态用 `--show`；缓存落 `.cache/run_once/`（已 gitignore）。
-- 与「预算护栏」的关系：预检自带的单步 / 总体超时是**防误跑长命令**；`run_once.py` 是**防重复跑同一命令**，两者叠加，
-  不得以「反正有护栏」为由重复执行。
+### 依赖维护（依赖外置在仓外，原位置是符号链接）
 
-## 工作区卫生（临时 / 日志文件落点红线）
+- `bms/scripts/tools/deps/外置依赖.sh`（`.bat`）：平时保持外置态。
+- `bms/scripts/tools/deps/还原依赖.sh`（`.bat`）：**`pnpm install` / `uv sync` 前必须先做**（安装器见到符号链接会误判跳过）。
+- `bms/scripts/tools/deps/重装依赖.sh`（`.bat`）：还原 → 安装 → 再外置（`--frontend-only` / `--backend-only`）。
+- 位置：`DEPS_DIR` 环境变量 > `bms/deploy/.env` > `$HOME/dev-deps/bms`。
+- 细节（依赖仓布局、pnpm 单一 workspace、严格依赖树、跨仓路径依赖与镜像口径）：《[开发机部署使用说明总览](bms/bms文档/资料/开发机/windows/开发机部署使用说明总览.md)》、《[pnpm 部署使用说明](bms/bms文档/资料/开发机/windows/pnpm部署使用说明.md)》、《[uv 部署使用说明](bms/bms文档/资料/开发机/windows/uv部署使用说明.md)》。
 
-- **唯一合法落点**：临时文件、日志、截图、脚本草稿、探针产物一律落**工作区根 `tmp/`**；工程缓存落**各仓 `.cache/`**。除此之外任何位置出现日志 / 临时类文件都算**污染工作区**（2026-10-26 用户拍板）。
-- **禁止落在仓库根 / 源码目录**：`bms/`、`mdm/`、`engkit/`、`biz/`、`test/` 的仓根与源码目录内**不得**出现 `*.log` / `*.err` / `*.out` / `tmp-*` / `.coverage*` 等产物——即使已 gitignore 也不许（污染的是磁盘落点与检索噪音，不是提交历史）。
-- **护栏即时报错**：`bms/engkit.toml` 预检第一步已接入「工作区卫生」检查（`bms/scripts/tools/preflight/check_workspace_hygiene.py` 薄包装 → 工作区仓 `scripts/tools/workspace/check_workspace_hygiene.py` 实现），白名单落点之外出现日志 / 临时文件**预检即失败**。CI 只 clone bms 单仓、无工作区上下文时自动跳过。
-- **判定口径**：落点白名单为主（不依赖扩展名黑名单），已 git 跟踪的项目文件天然豁免；依赖与构建目录（`node_modules` / `.venv` / `__pycache__` / `dist` …）整体剪枝。
-- **随手自查 / 清理**：工作区根执行 `python scripts/tools/workspace/check_workspace_hygiene.py`（违规退出码 1）；加 `--clean` 把违规文件隔离到 `tmp/_quarantine/<时间戳>/`；入口脚本 `检查工作区卫生.sh` / `.bat`。
-- **工具产物落点**：Playwright MCP 已配 `--output-dir tmp/playwright/mcp`（会话截图 / 快照直落 `tmp/`）；新增工具若默认往仓根写产物，**改配置指到 `tmp/`**，不要事后搬运。
+### 工作区卫生
 
-## 提交与推送
+- `python scripts/tools/workspace/check_workspace_hygiene.py`：临时 / 日志落点自查（违规退出码 1）；`--clean` 隔离到 `tmp/_quarantine/<时间戳>/`。
+- 细节（白名单落点、已跟踪文件豁免、依赖目录剪枝、工具产物默认落点）：[scripts/README](scripts/README.md)「工作区卫生」节。
 
-- **每个仓库独立提交**：bms 仓库、各产品仓库、工作区仓库分别提交；工作区仓库只提交配置文件（`AGENTS.md`、`README.md`、`.opencode/`、`.gitignore`、`.vscode/`、`*.code-workspace`）。
-- 提交信息遵循《命名规范》：`type(scope): 中文描述`；只暂存本次任务相关文件，不夹带无关改动。
-- 两级指令独立确认：说"提交"只做 commit；说"推送"只做 push 至 main。单人开发期**直推 main，不走 MR**。
-- **推送不触发流水线（CI 侧已关闭，2026-10-26 用户拍板）**：三仓（bms / mdm / engkit）`.gitlab-ci.yml` 的 `workflow.rules` 已**删除 `push` 与 `merge_request_event` 分支**——推送一律**不建流水线**，因此推送**无需**再加 `-o ci.skip`（该写法已从本文退役）。CI 只作**按需手工触发**：`python3 bms/scripts/tools/ci/trigger.py`（缺省 bms main，可 `--project mdm|engkit`、`--ref <分支/tag>`、`--watch` 盯终态），或 GitLab 界面 Run pipeline / `POST /projects/<id>/pipeline`。**手工触发即全量**（无 Git 推送事件的流水线里 `rules:changes` 恒为真，各 job 天然全跑）；推 `vX.Y.Z` tag 仍自动建流水线（发布语义，非日常推送）。日常验证以推送前的本地预检为准（见下条），触发后如需结果可盯，**不盯也无妨**。
-- **覆盖率硬门禁 = 100%（行 + 分支），本地不打折**（2026-10-12 用户拍板，收紧原 2026-09-27「只跑 `--fast`」口径）：后端 `pytest --cov-branch --cov-fail-under=100`、前端 Vitest `coverage.thresholds` 全 100；**不达标不得推送**——避免「本地放过、CI 才暴露、改半天还不知道行不行」。日常自检走**开发环**（见下条），不跑预检；推送前走**推送入口** `python3 bms/scripts/tools/preflight/推送.py`（含代码改动即定向档：静态 + 基座/边界 + 按 git 变更自动定向的受影响工程用例 + **变更源文件**覆盖率门禁，带单步 / 总体预算护栏，超时即中止；只改文档自动降为快速档）；**本地缺省不跑全量**——全量档须显式 `--full`（2026-10-18 用户拍板：预检脚本反转默认档并加预算护栏，全量与集成交 CI 按需触发）。CI 为按需复核，不承担「首次暴露」职责。**覆盖率门禁只有「硬门禁」与「尚未跑」两态，不设 `allow_failure` 软门禁**；存量缺口补齐前**不推送**（不触发流水线）。
-- **本地测试以「受变更影响定向用例 + 覆盖率门禁」为底线**（2026-10-12 用户拍板，修订 2026-09-27 口径）：定向用例仍按模块 / 路径选择（不跑与改动无关的用例），但**覆盖率必须本地跑到 100%**；全量与集成（E2E / 三库 / 压测）仍交 CI 按需触发，确需全量时先向用户说明并确认。
-- **开发环（改完即测）与推送环分开**（2026-10-28 用户拍板）：开发期间改一个 bug 用 `bms/scripts/tools/preflight/测试改动内容.sh`（mdm 同款，等价 `engkit run-changed`）——只跑 git 改动的**直接依赖**测试（不做传递闭包、不退化工程级全量）、不采集覆盖率、只对改动文件跑 ruff、前端只跑直接命中包；**推送前**走**推送入口** `bms/scripts/tools/preflight/推送.sh`（mdm 同款，等价 `engkit push`），它先跑预检把覆盖率门禁与全仓静态补齐、通过才推送。开发环跳过覆盖率不算破坏上条「本地 100%」口径，硬门禁以推送入口为准，间接依赖与覆盖率缺口由预检闭包选测与 CI 全量兜底。
-- **预检 = 推送的内部步骤，本地没有独立入口（机器强制，2026-10-29 二次拍板）**：首次（10-29）只判「工作树是否干净」，实测被「开发中间过程也先提交、再调预检」整条绕过（当日 14 次真跑、41 分钟、5 次失败，全是「改→跑→失败→改→再跑」）——判据因此从「是否已提交」换成「是否真要推送」。现行口径：**本地手动调用 `engkit preflight` 一律拒绝**（退出码 2，零步骤执行），只有两条触发路径——① 推送入口 `engkit push`（先预检、通过才 `git push`）；② CI 环境。**档位按待推提交自动选**：全为文档（`[push].doc_globs`）→ 快速档（静态 + 护栏，秒级）；含代码 / 配置 → 定向档（静态 + 定向用例 + 覆盖率门禁）；`--full` 显式全量；`push --check` 是「只跑预检、不推送」的唯一出口。工作树有未提交改动即拒绝，**不设 `--allow-dirty` 之类逃生口**；真跑 / 被拒两类事件落 `<仓根>/.cache/preflight/audit.jsonl`。闸门与档位判定都在 `engkit` 包内实现，各仓 `engkit.toml` 只放 `[preflight.gate]` / `[push]` 配置，CI 不设闸门。口径见 `bms/bms文档/规范/AI开发规范.md`「开发环 / 推送环」节。
-- **CI job 定义改动不在同一条流水线自验**：`.gitlab-ci.yml` 改动只负责创建流水线，job 级触发已不再监听 `.gitlab-ci.yml`（改按各域路径放行，纯 CI / 部署 / 后端改动不再重建前端）。因此改了某个 job 的定义后，它不会在这条推送里被跑到，要等下次命中对应路径；配置改动风险低、可回退，必要时手动跑一次 web 流水线即可验证。
-- **推送后不盯守 CI**：push 完成即收尾——**除非有必要**（本次含代码 / 脚本改动需确认结果、或用户明确要求），否则不得轮询、后台盯守或反复查询流水线状态；确需盯守时先用一句话说明理由，且用秒查而非 `sleep` 阻塞轮询。
-- bms 改动同步到其他工作区：在任一工作区提交推送后，其他工作区执行 `git -C bms pull` 即可对齐；产品仓库同理。
+### 浏览器真机验证
+
+- Playwright MCP（`mcp__playwright__*`）：导航 / 点击 / 填表 / 截图 / 读控制台。
+- 页面结构用 `browser_snapshot` / `browser_find`（a11y 树带 `[ref=eNN]`），**不要依赖** `.playwright-mcp/*.yml`。
+- 截图落 `tmp/`；控制台只认预期错误（favicon 404 / 模块宿主未起 `remoteEntry` 拒连 / 未登录 401）。
+- 细节（登记、与 `playwright-cli` 的取舍、长会话口径）：《[CodeBuddy部署使用说明](bms/bms文档/资料/开发机/linux/CodeBuddy部署使用说明.md)》「浏览器真机验证」节。
+
+### 服务器电源控制
+
+- `bms/scripts/tools/wol/`：`唤醒mjbk.sh` / `睡眠mjbk.sh` / `关机mjbk.sh`（Python 实现在同目录）。
+- **关机是破坏性操作，执行前必须问用户**；凭据从 `bms/deploy/.env` 读。
+- 细节（每日自动睡醒、S3 口径、凭据键位）：《[开发服务器电源控制使用说明](bms/bms文档/资料/开发服务器/linux/开发服务器电源控制使用说明.md)》。
+
+### CI
+
+- 推送**不触发**流水线；要跑全量 / 集成时手工触发：`python3 bms/scripts/tools/ci/trigger.py`（`--project mdm|engkit`、`--ref <分支>`、`--watch` 盯终态）。
+- 手工触发即全量；推送后默认**不盯** CI。
+- 细节（`workflow.rules` 口径、tag 发布语义、job 分区）：《[开发部署规划](bms/bms文档/规划/开发部署规划.md)》「开发工作流与 CI」节。
+
+## 红线
+
+- **凭据与本地资源不入库**：`bms文档/用户文档/本地资源.md`、各仓 `deploy/.env` 已 gitignore——勿恢复跟踪、勿提交、勿写入其他文档或回答；公开文档（README 等）不得出现服务器 / 内网 IP / 端口 / 账号。
+- **临时产物落点**：日志 / 截图 / 草稿一律 `tmp/`，工程缓存落各仓 `.cache/`，不得落在仓库根或源码目录。
+- **提交与推送分离**：每仓独立提交，只暂存本次相关文件；说「提交」只 commit、说「推送」才 push（直推 main，不走 MR）；提交信息 `type(scope): 中文描述`。
+- **不手改生成物**：`.reasonix/`、opencode 插件产物等。
+- **网络走国内镜像**：PyPI 阿里云 / 清华、npm npmmirror、Docker 加速器；GitHub 用 `ghfast.top` 前缀。
+- 细节：本地资源与凭据口径见《[开发服务器部署使用说明总览](bms/bms文档/资料/开发服务器/linux/开发服务器部署使用说明总览.md)》；公开文档写法见《[文档生成规范](bms/bms文档/规范/文档生成规范.md)》。
+
+## 协作口径
+
+- 待拍板事项（选型 / 方案 / 范围 / 是否执行）**先逐项问、用 `question` 工具确认**：每项候选 ≥2、推荐项第一并标注「（推荐）」；确认结果汇总成表回显后再执行。
+- 推荐项着眼长期演化成本（可扩展 / 兼容 / 便于接入），不为省眼前工作量推应付式方案。
+- 执行中出现原范围外的新待决项，同样先问再动。
+- 完整纪律：《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》第 7 节「红线与纪律」；确认流程见第 3 节「产出与执行流程」。
