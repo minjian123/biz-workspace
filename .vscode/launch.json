@@ -196,6 +196,25 @@
       "console": "integratedTerminal",
       "justMyCode": false,
       "env": { "PYTHONUNBUFFERED": "1" }
+    },
+    {
+      // **产品进程断点**（mdm 等）：产品服务的代码在**产品仓**，bms 侧 `ops/dev_run.py` 无法跨仓 runpy
+      // 进去，故用 IDE 原生 `module` 启动 + `envFile`——环境（回环别名 / 同一 8000 / 端点覆盖 / 开发密钥）
+      // 由 `本地全套.py up`（收尾自动）或 `env` 子命令写到 `<产品仓>/deploy/.dev-env.<服务键>.local`，
+      // 与脚本起的进程完全同源 ⇒ 断点 / 变量 / 调用栈与 `python -m mdm` 一致（`justMyCode: false` 可步入基座）。
+      // 步骤：① `python3 bms/scripts/tools/dev/本地全套.py stop mdm` 腾位；② 启动本项；
+      // ③ 调试会话停止即服务结束，之后 `本地全套.py up` 一键补回。
+      // 新增产品仓 = 复制本项，按该仓声明改 module / cwd / python / envFile 四处（服务键同名）。
+      "name": "后端：产品服务（debugpy · mdm）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "mdm",
+      "cwd": "${workspaceFolder}/mdm/backend",
+      "python": "${workspaceFolder}/mdm/backend/.venv/bin/python",
+      "windows": { "python": "${workspaceFolder}/mdm/backend/.venv/Scripts/python.exe" },
+      "envFile": "${workspaceFolder}/mdm/deploy/.dev-env.mdm.local",
+      "console": "integratedTerminal",
+      "justMyCode": false
     }
   ],
   "compounds": [
