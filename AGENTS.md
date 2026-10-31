@@ -93,6 +93,7 @@
   - `index_update`：刚改过文件、怀疑索引旧时先刷（1~2 秒）。
 - 选档：不知道去哪找 → 检索服务；已知精确符号 → `rg`；已知在哪 → 限定目录后 `rg`。命中太多先加 `kind` / `path` 收敛，别把 `limit` 拉满。
 - 命令行兜底：`python3 bms/scripts/tools/search/search_mcp.py -q 关键词`（在**工作区根**执行）；索引在 `<工作区根>/.cache/search/`，`--update` 增量、`--rebuild` 重建。
+- **WorkBuddy 专用（其它 agent 跳过本条）**：WorkBuddy 把 MCP 工具放进延迟加载池，调用前要先检索工具定义、多一次往返，与其绕一圈不如直调命令行 —— `python3 bms/scripts/tools/search/search_mcp.py -q 关键词`（同一索引、同一排序、同一摘要；`--snippet` 带命中片段、`--update` 刷索引）。工具直接可见的 agent（opencode / CodeBuddy / Claude Code 等）仍按上方 MCP 用法，不必绕命令行。
 - **禁用** `--no-ignore` / `-uu`（会扫进依赖与产物）。
 - 细节（安装、`.ignore` 与 `.gitignore` 分工、各 agent 的 MCP 配置、索引维护与实测）：《[内容检索工具部署使用说明](bms/bms文档/资料/工具/内容检索工具部署使用说明.md)》。
 
