@@ -94,7 +94,13 @@
 - `bms/scripts/tools/deps/外置依赖.sh`（`.bat`）：平时保持外置态。
 - `bms/scripts/tools/deps/还原依赖.sh`（`.bat`）：**`pnpm install` / `uv sync` 前必须先做**（安装器见到符号链接会误判跳过）。
 - `bms/scripts/tools/deps/重装依赖.sh`（`.bat`）：还原 → 安装 → 再外置（`--frontend-only` / `--backend-only`）。
-- 位置：`DEPS_DIR` 环境变量 > `bms/deploy/.env` > `$HOME/dev-deps/bms`。
+- 位置：`DEPS_DIR` 环境变量 > `bms/deploy/.env` > `$HOME/dev-deps/bms`；**依赖仓根下再按平台分一层**（`<根>/windows` / `<根>/linux`），目录内 `.platform` 文件记录平台标识。
+- **跨平台隔离（2026-10-31 事故后加固，已在 `deps_common.py` 落地）**：Windows 与 WSL 共用同一 `DEPS_DIR` 时，两边的 venv / node_modules 落在**不同子目录**，互不覆盖；脚本侧再用 `.platform` + `pyvenv.cfg` 双重校验（不匹配直接拒绝）。
+  - 切换平台只需跑一次 `重装依赖.py`（或 `外置依赖.py`）：两边数据都在，**不需要重新安装**。
+  - `uv` / `pnpm` / `pip` 仍只许经 deps 脚本调用；脚本外的安装器**不受脚本校验保护**，会把当前平台那份写坏（今日事故：WSL 侧 uv 把 `backend-venv` 写成 `home=/usr/local/bin`，Windows 侧 `Scripts/` 全丢）。
+  - **不要把命令套进 `bash -lc` / `bash -c`**：Windows 上 `bash` 可能解析到 WSL 的 `bash.exe`（出现 `/mnt/d/...` 路径即证据），随之调用的是 WSL 侧的 uv / python。切目录直接 `cd <dir> && <cmd>`（同一 shell）；需要 shell 语义时用 `cmd /c`。
+  - 调用前先验身份：`uv --version` 含 `windows` 才是本机 uv；`python -c "import sys;print(sys.executable)"` 应为 `C:\...`。
+  - 自检：`.venv/Scripts/python.exe` 不存在、且 `.venv/pyvenv.cfg` 的 `home` 是 POSIX 路径 → 被 WSL 侧污染；跑一次 `重装依赖.py --backend-only` 即回到本平台目录。
 - 细节（依赖仓布局、pnpm 单一 workspace、严格依赖树、跨仓路径依赖与镜像口径）：《[开发机部署使用说明总览](bms/bms文档/资料/开发机/windows/开发机部署使用说明总览.md)》、《[pnpm 部署使用说明](bms/bms文档/资料/开发机/windows/pnpm部署使用说明.md)》、《[uv 部署使用说明](bms/bms文档/资料/开发机/windows/uv部署使用说明.md)》。
 
 ### 工作区卫生
