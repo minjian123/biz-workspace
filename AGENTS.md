@@ -77,14 +77,14 @@
 - 前提：工作树必须干净（先提交）。**本地手动跑 `engkit preflight` 会被拒绝**，这是设计（只有推送与 CI 能触发）。
 - 细节（档位判据、`[push]` 配置、审计）：《[工程化工具包说明](engkit/engkit文档/概述/工程化工具包说明.md)》§4.3「预检段」；开发环 / 推送环分工见《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》。
 
-### 重命令：一律包装，禁止重复跑
+### 重命令：只跑单文件 / 单节点
 
-- 命令：`python3 scripts/tools/preflight/run_once.py -- <原命令>`（在 `bms/` 仓根）。
-- 适用：窄多目录 `pytest`、全仓 `ruff`、全仓 `pyright`。未包装裸跑会被守卫拦下（`ENGKIT_ALLOW_UNWRAPPED=1` 只用于排查包装器本身）。
-- **不适用全量测试**：开发时（含 `run_once` 包装）跑无目标 / 宽目录 / `--pyargs` 的 `pytest` 会被全量测试守卫拒绝；前端 vitest 无过滤全跑一个包同样拒绝。全量测试只由 CI 执行，没有 `--full` 或环境变量逃生口；`run-selected --force-full` 仅 CI 可用。
-- 缓存：同命令 + 同工作区指纹，30 分钟内命中即回放完整输出；改完要立刻重验加 `--force`，只看状态用 `--show`。
-- **不要为挑几行报错整轮重跑**：改看单文件 `ruff check <文件>` / `pyright <文件>` / `pytest <目录>`，秒级。
-- 细节（缓存键、守卫安装、`ruff` 原生二进制的覆盖边界）：《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》「重命令不重跑」节。
+- 开发期只跑改动相关：`bms/scripts/tools/preflight/测试改动内容.sh`（Windows `.bat`；等价 `engkit run-changed`）。
+- 单文件 / 单节点直跑（秒级）：`ruff check <文件>` / `pyright <文件>` / `pytest <文件>` / `pytest <文件>::<节点>`。
+- **不再提供重命令包装**：窄多目录 `pytest`、无参数 `ruff` / `pyright` 会被重命令守卫拦下；跨模块排查走推送预检或 CI。`ENGKIT_ALLOW_UNWRAPPED=1` 仅用于排查守卫误判。
+- **全量测试只由 CI 执行**：开发时跑无目标 / 宽目录 / `--pyargs` 的 `pytest` 会被全量测试守卫拒绝；前端 vitest 无过滤全跑一个包同样拒绝。没有 `--full` 或环境变量逃生口；`run-selected --force-full` 仅 CI 可用。
+- **不要为挑几行报错整轮重跑**：改看单文件 `ruff check <文件>` / `pyright <文件>` / `pytest <文件>`，秒级。
+- 细节（守卫安装、`ruff` 原生二进制的覆盖边界）：《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》「重命令不重跑」节。
 
 ### 检索：找东西先用它
 

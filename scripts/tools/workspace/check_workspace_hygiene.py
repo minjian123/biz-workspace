@@ -46,7 +46,7 @@ TEMP_ROOT_NAME = "tmp"
 """工作区根唯一合法的临时落点目录名（各仓内同名目录**不**放行）。"""
 
 CACHE_DIR_NAME = ".cache"
-"""仓内缓存目录名（`run_once` / `coverage` 等工程产物落点，任意层级放行）。"""
+"""仓内缓存目录名（`coverage` 等工程产物落点，任意层级放行）。"""
 
 PRUNE_DIRS = frozenset(
     {
