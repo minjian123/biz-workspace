@@ -9,6 +9,8 @@
 | `tools/workspace/` | 一键搭建工作区：`setup_workspace.py` 克隆 bms / 产品 / test 仓、建三处软链、核对分支与本地待办；入口 `搭建工作区.sh`（Linux）/ `搭建工作区.bat`（Windows）。用法见 [README](../README.md)「从零搭建工作区」节 |
 | `tools/workspace/` | 工作区卫生护栏：`check_workspace_hygiene.py` 检查临时 / 日志文件是否只落在工作区根 `tmp/` 与各仓 `.cache/`（违规退出码 1），`--clean` 隔离到 `tmp/_quarantine/<时间戳>/`；入口 `检查工作区卫生.sh` / `.bat`。已接入 bms 预检第一步（`bms/engkit.toml`），判定口径见下文「工作区卫生」节 |
 | `tools/workspace/` | 计划表盘点与体检：`list_pending_tasks.py` 扫描**全部平级仓**的计划表（`<仓>/<仓>文档/项目/<项目>/计划/*.md`，软链文档根按真实路径去重），列出未完成任务 / 逾期项 / 列形问题（兼容「状态」/「完成日期」/无状态列三种列形）；`--lint` 按《计划文档规范》§4/§5 校列名顺序、列数、状态取值、「已完成」是否误留剩余表、窗口形态（区间 / 单日 / 搁置）、完成日期形态与编号重复。入口 `列出待办任务.sh` / `.bat`。用法：`python3 scripts/tools/workspace/list_pending_tasks.py [--all] [--repo bms] [--project 07B] [--overdue] [--exclude-parked] [--sort window|task] [--json] [--check] [--lint] [--today YYYY-MM-DD] [--self-test]`；`--check` / `--lint` 命中问题即退出码 1 |
+| `tools/diagnostics/` | 卡顿自检（**只读**）：`diagnose_stuck.py` 两次采样进程 IO，找出持续写盘的进程，并读 `<tmp>/pytest-of-<user>/pytest-current` 判断「pytest 是否停止推进」，据此区分「某用例死循环」与「模块导入 / 建库的瞬时峰值」；判「疑似卡住」时打印最近用例目录名与单跑定位命令。入口 `诊断卡顿.sh` / `.bat`。用法：`python3 scripts/tools/diagnostics/diagnose_stuck.py [--interval 3] [--rounds 2] [--busy-mbps 1] [--stale-seconds 30] [--json]`；疑似卡住退出码 1 |
+
 
 ## 工作区卫生 <a id="hygiene"></a>
 
