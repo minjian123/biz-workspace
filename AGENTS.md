@@ -80,7 +80,8 @@
 ### 重命令：一律包装，禁止重复跑
 
 - 命令：`python3 scripts/tools/preflight/run_once.py -- <原命令>`（在 `bms/` 仓根）。
-- 适用：全量 / 多目录 `pytest`、全仓 `ruff`、全仓 `pyright`。未包装裸跑会被守卫拦下（`ENGKIT_ALLOW_UNWRAPPED=1` 只用于排查包装器本身）。
+- 适用：窄多目录 `pytest`、全仓 `ruff`、全仓 `pyright`。未包装裸跑会被守卫拦下（`ENGKIT_ALLOW_UNWRAPPED=1` 只用于排查包装器本身）。
+- **不适用全量测试**：开发时（含 `run_once` 包装）跑无目标 / 宽目录 / `--pyargs` 的 `pytest` 会被全量测试守卫拒绝；前端 vitest 无过滤全跑一个包同样拒绝。全量测试只由 CI 执行，没有 `--full` 或环境变量逃生口；`run-selected --force-full` 仅 CI 可用。
 - 缓存：同命令 + 同工作区指纹，30 分钟内命中即回放完整输出；改完要立刻重验加 `--force`，只看状态用 `--show`。
 - **不要为挑几行报错整轮重跑**：改看单文件 `ruff check <文件>` / `pyright <文件>` / `pytest <目录>`，秒级。
 - 细节（缓存键、守卫安装、`ruff` 原生二进制的覆盖边界）：《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》「重命令不重跑」节。
