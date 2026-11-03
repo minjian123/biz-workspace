@@ -52,6 +52,7 @@
 ## 动手前
 
 - 动手前先读《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》，按「本地资源 → 规划 → 规范 → 设计 → 项目 → 需求 → 任务 → 计划 → 详细设计」建上下文；**先设计后编码**，偏差回写设计。
+- **解释器只认仓内 venv**：本仓 `pyproject.toml` 为 `target-version = "py314"`，代码使用 Python 3.14 语法（如 PEP 758 的无括号 `except A, B:`）。验证一律走 `bms/backend/.venv/Scripts/python.exe`（3.14）与同目录 `ruff.exe`；**禁止用 PATH 上的 `python`**——PATH 首个命中是 WorkBuddy 内置的 3.13 运行时（`~/.workbuddy/binaries/python/`），拿它跑 `ast.parse` / `pytest` 会把合法语法误报成 `SyntaxError`。**不要删除该内置运行时**（归宿主应用所有，删除会损伤宿主脚本执行且升级后回滚）。
 - 生成文档前读《[文档生成规范](bms/bms文档/规范/文档生成规范.md)》，三条最常踩的：
   - **逻辑图形**（流程 / 时序 / 状态 / 类 / 关系 / 甘特）一律 mermaid；**目录树、文件清单**用框线文本（`└├│─` + 行尾 `#`），不得画成 mermaid；**线框图 / 可交互原型**用 html。
   - html 的图片 / 音视频放同级「资源」下同名目录。
