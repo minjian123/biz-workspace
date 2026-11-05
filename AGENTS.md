@@ -98,6 +98,15 @@
 - **不要为挑几行报错整轮重跑**：改看单文件 `ruff check <文件>` / `pyright <文件>` / `pytest <文件>`，秒级。
 - 细节（守卫安装、`ruff` 原生二进制的覆盖边界）：《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》「重命令不重跑」节。
 
+### 覆盖率：查缺口只走一个入口
+
+- **唯一入口**：在 `bms` 仓根执行 `backend\.venv\Scripts\python.exe scripts\tools\preflight\coverage_report.py`（Linux 为 `backend/.venv/bin/python`）。它**只读最近一次采集的数据、不重跑用例**，缺口明细落 `.cache/coverage/gaps.txt`；**排障只看该文件，不得用终端过滤后的残缺输出下结论**。
+- **模块级（推送环 / CI 口径，行 + 分支 100%）**：`... coverage_report.py --module <点分模块> --module <点分模块>`（`--module` 可重复）。
+- **改动行（提交环口径）**：先把改动加入暂存区，再 `git diff --cached --name-only | ... coverage_report.py --changed`；只判本次 diff 触达的可执行行，不要求未改动代码达标。
+- **禁止** `pytest --cov` / `coverage run` 手工采集：门禁只认 `.cache/coverage/.coverage`，手工数据会得出与门禁不一致的假缺口，pytest 入口守卫会直接 `exit(2)`、用例零执行。
+- **先采集、后查缺口**：数据由提交前预检 / 推送预检 / CI 采集；代码改动后先跑相应入口再查，否则看到的是旧数据。退出码：`0` 达标 / `1` 未达标（含未采集到数据）/ `2` 参数或环境错误。
+- 细节（口径分工 / 豁免 / 守卫）：《[AI开发规范](bms/bms文档/规范/AI开发规范.md)》「覆盖率要求」节、《[测试规范](bms/bms文档/规范/测试规范.md)》§6。
+
 ### 检索：找东西先用它
 
 - MCP `bizssearch`（DSH / CodeBuddy 为 `mcp__bizssearch__*`，opencode 为 `tools.bizssearch.*`）：
