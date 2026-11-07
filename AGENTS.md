@@ -123,7 +123,7 @@
 
 - `engkit links`：相对链接与锚点；改完文档就跑。
 - `engkit docs-scope`：进度类字段只允许落在阶段计划。
-- `engkit eol`：行尾检查（工作树 CRLF）。**仓根缺 `.gitattributes`（或未写 `eol=lf`）时退 2**——护栏失效即失败，不静默报 0 违规；改完文件先 `engkit eol --fix`。
+- `engkit eol`：行尾检查。**仓根缺 `.gitattributes`（或未写 `eol=lf`）时退 2**——护栏失效即失败，不静默报 0 违规；**工作树残留 CRLF 只告警（退 0）**，因为 `.gitattributes` 的 clean 过滤器已保证入库内容恒为 LF，要工作树也干净就跑 `engkit eol --fix`（提交钩子已自愈暂存文件）。
 - 细节（三项护栏的判定与配置）：[engkit 文档首页](engkit/engkit文档/文档首页.md)、《[工程化工具包说明](engkit/engkit文档/概述/工程化工具包说明.md)》。
 
 ### 依赖维护（依赖外置在仓外，原位置是符号链接）
