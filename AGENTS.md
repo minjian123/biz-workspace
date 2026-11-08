@@ -59,6 +59,10 @@
   - md 预览 mermaid 用 VS Code **内置扩展**，**勿装** `bierner.markdown-mermaid`（会抢注配置键、日志刷错）。
 - 命名（代码 / 数据库 / API / 基础设施）遵循《[命名规范](bms/bms文档/规范/命名规范.md)》。
 - 测试分层、覆盖率门禁（100% 行 + 分支）与测试资产落点见《[测试规范](bms/bms文档/规范/测试规范.md)》。
+- **集合声明只落插入序并发集合类（高频踩坑，护栏常拦）**：类字段、函数参数与返回、带注解的局部变量，只要声明集合就**一律用继承 `BaseCollection` 的插入序并发集合类**——可变落 `ConcurrentStableList` / `ConcurrentStableSet` / `ConcurrentStableDict`，**值对象字段落不可变形态 `ConcurrentStableFrozen*`**；**禁裸** `dict` / `list` / `set` / `frozenset` 及 typing 别名，**禁只读 / 可变抽象** `Sequence` / `Mapping` / `AbstractSet` / `Collection` / `Mutable*`，**禁直接声明或继承** `Sorted*` / `ConcurrentSorted*`（体系内部实现，排序走排序契约）。省事记法：先判「这个集合写不写」——要写落 `ConcurrentStable*`，只读 / 冻结语义（值对象、常量）落 `ConcurrentStableFrozen*`（冻结后写入抛 `TypeError`，**别拿它当可写集合用**），**没有第三选项**；同构 `tuple[X, ...]` 视同集合声明、同样落 `ConcurrentStableList`，固定元数 `tuple[A, B]`（多返回值 / 元组值）才是显式豁免。
+  - **不查**：`Iterable` / `Iterator` / `Callable` 等迭代与调用协议；**照查**：测试目录、`ClassVar` 类级常量、`BaseSettings` 配置字段、函数体带注解局部变量（这四处是最常见的「我明明没用裸 list」型失败）。
+  - 框架强制内置类型的边界（ASGI `scope`、查询入参绑定、pydantic-settings 配置源等）才可在声明行行尾或紧邻上一行标注 `# bare-collections:allow`（附一句理由），**不得用于业务侧**。
+  - 护栏 `engkit base bare-collections`（=`scripts/tools/base_check/check_bare_collections.py`）已进提交环与推送环，存量以基线快照「只减不增」豁免；细节见《[后端开发规范](bms/bms文档/规范/后端开发规范.md)》「集合与排序」节、《[后端基类清单](bms/bms文档/后端基类清单.md)》「集合体系」节。
 
 ## 日常怎么干
 
